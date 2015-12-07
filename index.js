@@ -162,6 +162,23 @@ Remit.prototype.res = function res (event, callback, context, options) {
 
 
 
+Remit.prototype.treq = function reqt (event, args, callback, options) {
+    const debug = master_debug('remit.treq')
+
+    const self = this
+
+    if (!options) options = {}
+    if (!options.expiration) options.expiration = 5000
+    if (!options.timeout) options.timeout = 5000
+
+    self.req(event, args, callback, options)
+}
+
+
+
+
+
+
 Remit.prototype.req = function req (event, args, callback, options) {
     const debug = master_debug('remit.req')
 
