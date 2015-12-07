@@ -382,7 +382,10 @@ Remit.prototype.__on_result = function __on_result (message) {
     const self = this
     const debug = master_debug('remit.__on_result')
 
-    if (!self._results_callback[message.properties.correlationId]) return
+    if (!self._results_callback[message.properties.correlationId]) {
+        // If we've got it when we don't need it, we'll at least `nack` it first
+        return self._channel.nack(message, false, false)
+    }
 
     const callback = self._results_callback[message.properties.correlationId]
     let args = []
