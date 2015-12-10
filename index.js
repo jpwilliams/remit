@@ -80,73 +80,24 @@ Remit.prototype.res = function res (event, callback, context, options) {
                 self._channel.consume(chosen_queue, (message) => {
                     debug(`New message`)
 
-                    let data
-
-                    try {
-                        data = JSON.parse(message.content.toString())
-                    } catch (e) {
-                        debug(`Failed to parse JSON data; NACKing`)
-
-                        return self._channel.nack(message, false, false)
-                    }
-
-                    debug(`Parsed JSON data`)
-
-                    if (!message.properties.correlationId || !message.properties.replyTo) {
-                        debug(`No callback found; acting as listener`)
-
-                        try {
-                            callback(data)
-                            self._channel.ack(message)
-                        } catch (e) {
-                            if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
-                                self._channel.nack(message, false, false)
-                            } else {
-                                message.properties.headers = increment_headers(message.properties.headers)
-                                self._channel.publish(message.fields.exchange, message.fields.routingKey, message.content, message.properties)
-                                self._channel.ack(message)
-                            }
-
-                            if (self.on_error) {
-                                self.on_error(e)
-                            } else {
-                                throw e
-                            }
-                        }
+                    if (!message.properties.timestamp) {
+                        debug('No timestamp; processing message now')
+                        self.__consume_res(message, callback, context)
                     } else {
-                        debug(`Callback found; aiming to respond`)
+                        debug('Timestamp found')
+                        const time_to_wait = parseInt(message.properties.timestamp) - new Date().getTime()
 
-                        try {
-                            callback.call(context, data, function (err, data) {
-                                debug(`Received callback from responder`)
+                        if (time_to_wait < 0) {
+                            debug('Timestamp obsolete; processing message now')
+                            self.__consume_res(message, callback, context)
+                        } else {
+                            debug(`Processing message in ${time_to_wait}ms`)
 
-                                const options = {correlationId: message.properties.correlationId}
+                            setTimeout(() => {
+                                debug(`Processing message after waiting for ${time_to_wait}ms...`)
 
-                                debug(`Publishing message to ${message.properties.replyTo}`)
-
-                                self._channel.publish('remit', message.properties.replyTo, new Buffer(JSON.stringify(Array.prototype.slice.call(arguments))), options)
-                                self._channel.ack(message)
-                            })
-                        } catch (e) {
-                            debug(`Callback errored`)
-
-                            if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
-                                debug(`Run out of patience. NACKing...`)
-
-                                self._channel.nack(message, false, false)
-                            } else {
-                                debug(`Giving the message another chance...`)
-
-                                message.properties.headers = increment_headers(message.properties.headers)
-                                self._channel.publish(message.fields.exchange, message.fields.routingKey, message.content, message.properties)
-                                self._channel.ack(message)
-                            }
-
-                            if (self.on_error) {
-                                self.on_error(e)
-                            } else {
-                                throw e
-                            }
+                                self.__consume_res(message, callback, context)
+                            }, time_to_wait)
                         }
                     }
                 }, {
@@ -191,8 +142,9 @@ Remit.prototype.req = function req (event, args, callback, options) {
         self.__assert_exchange(() => {
             if (!callback) {
                 debug(`No callback specified for req; publishing "${event}" message now`)
+                debug(options)
 
-                return self._channel.publish('remit', event, new Buffer(JSON.stringify(args || {})), {})
+                return self._channel.publish('remit', event, new Buffer(JSON.stringify(args || {})), options)
             }
 
             self._results_name = `${this._service_name}:callback:${os.hostname()}:${process.pid}`
@@ -270,7 +222,27 @@ Remit.prototype.emit = function emit (event, args, options) {
 
     debug('Emitting ', args)
 
-    self.req.call(self, event, args, options.onResponse, options.context, options)
+    self.req.call(self, event, args, options.onResponse, options)
+}
+
+
+
+
+
+
+Remit.prototype.demit = function demit (event, delay, args, options) {
+    const debug = master_debug('remit.demit')
+
+    const self = this
+    if (!options) options = {}
+
+    options.broadcast = true
+    if (Object.prototype.toString.call(delay) === '[object Date]') options.timestamp = delay.getTime()
+    options.autoDeleteCallback = options.ttl ? false : true
+
+    debug ('Demitting ', args)
+
+    self.req.call(self, event, args, options.onResponse, options)
 }
 
 
@@ -429,6 +401,87 @@ Remit.prototype.__on_result = function __on_result (message) {
 
     self._channel.ack(message)
     delete self._results_callback[message.properties.correlationId]
+}
+
+
+
+
+
+
+Remit.prototype.__consume_res = function __consume_res (message, callback, context) {
+    const debug = master_debug('remit.__consume_res')
+
+    const self = this
+
+    let data
+
+    try {
+        data = JSON.parse(message.content.toString())
+    } catch (e) {
+        debug(`Failed to parse JSON data; NACKing`)
+
+        return self._channel.nack(message, false, false)
+    }
+
+    debug(`Parsed JSON data`)
+
+    if (!message.properties.correlationId || !message.properties.replyTo) {
+        debug(`No callback found; acting as listener`)
+
+        try {
+            callback(data)
+            self._channel.ack(message)
+        } catch (e) {
+            if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
+                self._channel.nack(message, false, false)
+            } else {
+                message.properties.headers = increment_headers(message.properties.headers)
+                self._channel.publish(message.fields.exchange, message.fields.routingKey, message.content, message.properties)
+                self._channel.ack(message)
+            }
+
+            if (self.on_error) {
+                self.on_error(e)
+            } else {
+                throw e
+            }
+        }
+    } else {
+        debug(`Callback found; aiming to respond`)
+
+        try {
+            callback.call(context, data, function (err, data) {
+                debug(`Received callback from responder`)
+
+                const options = {correlationId: message.properties.correlationId}
+
+                debug(`Publishing message to ${message.properties.replyTo}`)
+
+                self._channel.publish('remit', message.properties.replyTo, new Buffer(JSON.stringify(Array.prototype.slice.call(arguments))), options)
+                self._channel.ack(message)
+            })
+        } catch (e) {
+            debug(`Callback errored`)
+
+            if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
+                debug(`Run out of patience. NACKing...`)
+
+                self._channel.nack(message, false, false)
+            } else {
+                debug(`Giving the message another chance...`)
+
+                message.properties.headers = increment_headers(message.properties.headers)
+                self._channel.publish(message.fields.exchange, message.fields.routingKey, message.content, message.properties)
+                self._channel.ack(message)
+            }
+
+            if (self.on_error) {
+                self.on_error(e)
+            } else {
+                throw e
+            }
+        }
+    }
 }
 
 
