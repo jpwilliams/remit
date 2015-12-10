@@ -429,8 +429,9 @@ Remit.prototype.__consume_res = function __consume_res (message, callback, conte
         debug(`No callback found; acting as listener`)
 
         try {
-            callback(data)
-            self._channel.ack(message)
+            callback.call(context, data, function (err) {
+                self._channel.ack(message)
+            })
         } catch (e) {
             if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                 self._channel.nack(message, false, false)
