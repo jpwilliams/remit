@@ -1,7 +1,7 @@
 {
   "name": "remit",
-  "version": "1.1.6",
-  "description": "A small set of tools used to create simple microservices that don't need to be aware of one-another's existence.",
+  "version": "1.1.7",
+  "description": "A small set of functionality used to create microservices that don't need to be aware of one-another's existence.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
