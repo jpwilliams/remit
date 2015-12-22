@@ -205,7 +205,7 @@ remit.listen('user.#', function (args, done) {
 * [`Remit`](#requireremitoptions) - Instantiate Remit
 * [`req`](#reqendpoint-data-callback-options--timeout-5000) - Make a request to an endpoint
 * [`treq`](#treqendpoint-data-callback-options--timeout-5000) - Make a transient request to an endpoint
-* [`res`](#resendpoint-callback-context-options--queueName-my_queue) - Define an endpoint
+* [`res`](#resendpoint-callback-context-options--queuename-my_queue) - Define an endpoint
 * [`emit`](#emitevent-data-options) - Emit to all listeners of an event
 * [`demit`](#demitevent-eta-data-options) - Emit to all listeners of an event at a specified time
 * [`listen`](#listenevent-callback-context-options--queuename-my_queue) - Listen to emissions of an event
@@ -217,7 +217,7 @@ Creates a Remit object, with the specified `options` (if any), ready for use wit
 #### Arguments
 
 * `options` - _Optional_ An object containing options to give to the Remit instantiation. Currently-acceptable options are:
-	* `name` - The name to give the current service. This is used heavily for load balancing requests, so instances of the same service (that should load balance requests between themselves) should have the same name. Is _required_ if using [`listen`](#listen).
+	* `name` - The name to give the current service. This is used heavily for load balancing requests, so instances of the same service (that should load balance requests between themselves) should have the same name. Is _required_ if using [`listen`](#listenevent-callback-context-options--queuename-my_queue).
 	* `url` - The URL to use to connect to the AMQ. Defaults to `amqp://localhost`.
 	* `connection` - If you already have a valid AMQ connection, you can provide and use it here. The use cases for this are slim but present.
 
@@ -227,7 +227,7 @@ Makes a request to the specified `endpoint` with `data`, optionally returning a 
 
 #### Arguments
 
-* `endpoint` - A string endpoint that can be defined using [`res`](#res).
+* `endpoint` - A string endpoint that can be defined using [`res`](#resendpoint-callback-context-options--queuename-my_queue).
 * `data` - Can be any of `boolean`, `string`, `array` or `object` and will be passed to the responder.
 * `callback(err, data)` - _Optional_ A callback which is called either when the responder has handled the message or the message "timed out" waiting for a response. In the case of a timeout, `err` will be populated, though the responder can also explicitly control what is sent back in both `err` and `data`.
 * `options` - _Optional_ Supply an object here to explicitly define certain options for the AMQ message. `timeout` is the amount of time in milliseconds to wait for a response before returning an error. There is currently only one _defined_ use case for this, though it gives you total freedom as to what options you provide.
@@ -273,15 +273,15 @@ remit.req('user.profile', {
 
 ## treq(endpoint, data, [callback], [options = {timeout: 5000}])
 
-Identical to [`req`](#req) but will remove the request message upon timing out. Useful for calls from APIs. For example, if a client makes a request to delete a piece of content but that request times out, it'd be jarring to have that action suddenly undertaken at an unspecified interval afterwards. `treq` is useful for avoiding that circumstance.
+Identical to [`req`](#reqendpoint-data-callback-options--timeout-5000) but will remove the request message upon timing out. Useful for calls from APIs. For example, if a client makes a request to delete a piece of content but that request times out, it'd be jarring to have that action suddenly undertaken at an unspecified interval afterwards. `treq` is useful for avoiding that circumstance.
 
 #### AMQ behaviour
 
-Like [`req`](#req) but adds an `expiration` field to the message.
+Like [`req`](#reqendpoint-data-callback-options--timeout-5000) but adds an `expiration` field to the message.
 
 ## res(endpoint, callback, [context], [options = {queueName: 'my_queue'}])
 
-Defines an endpoint that responds to [`req`](#req)s. Returning the provided `callback` is a nessecity regardless of whether the requester wants a response as it is to used to acknowledge messages as being handled.
+Defines an endpoint that responds to [`req`](#reqendpoint-data-callback-options--timeout-5000)s. Returning the provided `callback` is a nessecity regardless of whether the requester wants a response as it is to used to acknowledge messages as being handled.
 
 #### Arguments
 
@@ -310,13 +310,13 @@ remit.res('user.profile', function (args, done) {
 
 ## emit(event, [data], [options])
 
-Emits to all [`listen`](#listen)ers of the specified event, optionally with some `data`. This is essentially the same as [`req`](#req) but no `callback` can be defined and `broadcast` is set to `true` in the message options.
+Emits to all [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers of the specified event, optionally with some `data`. This is essentially the same as [`req`](#reqendpoint-data-callback-options--timeout-5000) but no `callback` can be defined and `broadcast` is set to `true` in the message options.
 
 #### Arguments
 
-* `event` - The "event" to emit to [`listen`](#listen)ers.
-* `data` - _Optional_ Data to send to [`listen`](#listen)ers. Can be any of `boolean`, `string`, `array` or `object`.
-* `options` - _Optional_ Like [`req`](#req), supply an object here to explicitly define certain options for the AMQ message.
+* `event` - The "event" to emit to [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers.
+* `data` - _Optional_ Data to send to [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers. Can be any of `boolean`, `string`, `array` or `object`.
+* `options` - _Optional_ Like [`req`](#reqendpoint-data-callback-options--timeout-5000), supply an object here to explicitly define certain options for the AMQ message.
 
 #### Examples
 
@@ -342,14 +342,14 @@ remit.emit('user.registered', {
 
 ## demit(event, eta, [data], [options])
 
-Like [`emit`](#emit) but tells [`listen`](#listen)ers to wait until `eta` to running their respective functions. Similar in design and functionality to [Celery's `eta` usage](http://docs.celeryproject.org/en/latest/userguide/calling.html#eta-and-countdown). Largely useful for tasks that should repeat like session health checks.
+Like [`emit`](#emitevent-data-options) but tells [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers to wait until `eta` to running their respective functions. Similar in design and functionality to [Celery's `eta` usage](http://docs.celeryproject.org/en/latest/userguide/calling.html#eta-and-countdown). Largely useful for tasks that should repeat like session health checks.
 
 #### Arguments
 
-* `event` - The "event" to emit to [`listen`](#listen)ers.
+* `event` - The "event" to emit to [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers.
 * `eta` - A `date` object being the earliest time you wish listeners to respond to the emission.
-* `data` - _Optional_ Data to send to [`listen`](#listen)ers. Can be any of `boolean`, `string`, `array` or `object`.
-* `options` - _Optional_ Like [`req`](#req), supply an object here to explicitly define certain options for the AMQ message.
+* `data` - _Optional_ Data to send to [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers. Can be any of `boolean`, `string`, `array` or `object`.
+* `options` - _Optional_ Like [`req`](#reqendpoint-data-callback-options--timeout-5000), supply an object here to explicitly define certain options for the AMQ message.
 
 #### Examples
 
@@ -373,13 +373,13 @@ remit.demit('health.check', tomorrow, {
 
 #### AMQ behaviour
 
-Like [`emit`](#emit) but adds a `timestamp` field to the message which is understood by [`listen`](#listen)-based functions.
+Like [`emit`](#emitevent-data-options) but adds a `timestamp` field to the message which is understood by [`listen`](#listenevent-callback-context-options--queuename-my_queue)-based functions.
 
 ## listen(event, callback, [context], [options = {queueName: 'my_queue'}])
 
-Listens to events emitted using [`emit`](#emit). Listeners are grouped for load balancing using their `name` provided when instantiating Remit.
+Listens to events emitted using [`emit`](#emitevent-data-options). Listeners are grouped for load balancing using their `name` provided when instantiating Remit.
 
-While listeners can't sent data back to the [`emit`](#emit)ter, calling the `callback` is still required for confirming successful message delivery.
+While listeners can't sent data back to the [`emit`](#emitevent-data-options)ter, calling the `callback` is still required for confirming successful message delivery.
 
 #### Arguments
 
