@@ -1,21 +1,18 @@
 # What's Remit?
+A small set of functionality used to create microservices that don't need to be aware of one-another's existence. It uses AMQP at its core to manage service discovery-like behaviour without the need to explicitly connect one service to another.
+
 `remit` is intended to be a small set of functionality used to create simple microservices that don't need to be aware of one-another's existence.
 
 It uses _RabbitMQ_ at its core to manage service discovery-like behaviour without the need to explicitly connect one service to another.
 
-# Pre-requisites
+# Contents
 
-To use `remit` you'll need:
-* A _RabbitMQ_ server
-* _Node v4.x.x_
-* _npm_
-
-# Installation
-
-Once your _RabbitMQ_ server's up and running, simply use `npm` to install `remit`!
-```javascript
-npm install remit
-```
+* [Simple usage](#simple-usage)
+* [Pre-requisites](#pre-requisites)
+* [Installation](#installation)
+* [Key examples](#key-examples)
+* [API reference](#api-reference)
+* [Improvements](#improvements)
 
 # Simple usage
 
@@ -52,13 +49,18 @@ remit.res('add', function (args, done) {
 })
 
 // Listener 1
-remit.listen('something.happened', function (args) {
+remit.listen('something.happened', function (args, done) {
 	console.log(args)
+
+	// We return done() to acknowledge that the task has been completed
+	return done()
 })
 
 // Listener 2
 remit.listen('something.#', function (args) {
 	console.log('Something... did something...')
+
+	return done()
 })
 
 /*
@@ -69,6 +71,20 @@ remit.listen('something.#', function (args) {
 	5. Listener 1 logs the arguments the API sent.
 	6. Listener 2 logs 'Something... did something...'.
 */
+```
+
+# Pre-requisites
+
+To use `remit` you'll need:
+* A _RabbitMQ_ server
+* _Node v4.x.x_
+* _npm_
+
+# Installation
+
+Once your _RabbitMQ_ server's up and running, simply use `npm` to install `remit`!
+```javascript
+npm install remit
 ```
 
 # Key examples
@@ -157,12 +173,14 @@ const remit = require('remit')({
 
 const beanmail = require('send-mail-to-mr-bean')
 
-remit.listen('user.login.success', function (args) {
+remit.listen('user.login.success', function (args, done) {
 	let today = '14/06/1961'
 
 	if (today === args.user.birthday) {
 		beanmail.send()
 	}
+
+	return done()
 })
 ```
 
@@ -179,10 +197,209 @@ const remit = require('remit')({
 
 let user_action_counter = 0
 
-remit.listen('user.#', function (args) {
+remit.listen('user.#', function (args, done) {
 	user_action_counter++
+
+	return done()
 })
 ```
+
+# API reference
+
+## require('remit')([options])
+
+Creates a Remit object, with the specified `options` (if any), ready for use with further functions.
+
+### Arguments
+
+* `options` - _Optional_ An object containing options to give to the Remit instantiation. Currently-acceptable options are:
+	* `name` - The name to give the current service. This is used heavily for load balancing requests, so instances of the same service (that should load balance requests between themselves) should have the same name. Is _required_ if using [`listen`](#listen).
+	* `url` - The URL to use to connect to the AMQ. Defaults to `amqp://localhost`.
+	* `connection` - If you already have a valid AMQ connection, you can provide and use it here. The use cases for this are slim but present.
+
+## req(endpoint, data, [callback], [options = {timeout: 5000}])
+
+Makes a request to the specified `endpoint` with `data`, optionally returning a `callback` detailing the response. It's also possible to provide `options`, namely a `timeout`.
+
+### Arguments
+
+* `endpoint` - A string endpoint that can be defined using [`res`](#res).
+* `data` - Can be any of `boolean`, `string`, `array` or `object` and will be passed to the responder.
+* `callback(err, data)` - _Optional_ A callback which is called either when the responder has handled the message or the message "timed out" waiting for a response. In the case of a timeout, `err` will be populated, though the responder can also explicitly control what is sent back in both `err` and `data`.
+* `options` - _Optional_ Supply an object here to explicitly define certain options for the AMQ message. `timeout` is the amount of time in milliseconds to wait for a response before returning an error. There is currently only one _defined_ use case for this, though it gives you total freedom as to what options you provide.
+
+### Examples
+
+```javascript
+// Calls the 'user.profile', endpoint, but doesn't ask for a response.
+remit.req('user.profile', {
+	username: 'jacob123'
+})
+```
+
+```javascript
+// Calls the 'user.profile' endpoint asking for a response but timing out after the default of 5 seconds.
+remit.req('user.profile', {
+	username: 'jacob123'
+}, (err, data) => {
+	if (err) console.error('Oh no! Something went wrong!', err)
+
+	return console.log('Got the result back!', data)
+})
+```
+
+```javascript
+// Calls the 'user.profile', endpoint asking for a response but timing out after a custom wait of 20 seconds.
+remit.req('user.profile', {
+	username: 'jacob123'
+}, (err, data) => {
+	if (err) console.error('Oh no! Something went wrong!', err)
+
+	return console.log('Got the result back!', data)
+}, {
+	timeout: 20000
+})
+```
+
+### AMQ behaviour
+
+1. Confirms connection and exchange exists.
+2. If a callback's provided, confirm the existence of and consume from a "result queue" specific to this process.
+3. Publish the message using the provided `endpoint` as a routing key.
+
+## treq(endpoint, data, [callback], [options = {timeout: 5000}])
+
+Identical to [`req`](#req) but will remove the request message upon timing out. Useful for calls from APIs. For example, if a client makes a request to delete a piece of content but that request times out, it'd be jarring to have that action suddenly undertaken at an unspecified interval afterwards. `treq` is useful for avoiding that circumstance.
+
+### AMQ behaviour
+
+Like [`req`](#req) but adds an `expiration` field to the message.
+
+## res(endpoint, callback, [context], [options = {queueName: 'my_queue'}])
+
+Defines an endpoint that responds to [`req`](#req)s. Returning the provided `callback` is a nessecity regardless of whether the requester wants a response as it is to used to acknowledge messages as being handled.
+
+### Arguments
+
+* `endpoint` - A string endpoint that requetsers will use to reach this function.
+* `callback(args, done)` - A callback containing data from the requester in `args` and requiring the running of `done(err, data)` to signify completion regardless of the requester's requirement for a response.
+* `context` - _Optional_ The context in which `callback(args, done)` will be called.
+* `options` - _Optional_ An object that can contain a custom queue to listen for messages on.
+
+### Examples
+
+```javascript
+// Defines the 'user.profile' profile endpoint, retrieving a user from our dummy database
+remit.res('user.profile', function (args, done) {
+	if (args.username) return done('No username provided!')
+
+	mydb.get_user(args.username, function (err, user) {
+    	return done(err, user)
+    })
+})
+```
+
+### AMQ behaviour
+
+1. Confirms connection and exchange exists.
+2. Binds to and consumes from the queue with the name defined by `endpoint`
+
+## emit(event, [data], [options])
+
+Emits to all [`listen`](#listen)ers of the specified event, optionally with some `data`. This is essentially the same as [`req`](#req) but no `callback` can be defined and `broadcast` is set to `true` in the message options.
+
+### Arguments
+
+* `event` - The "event" to emit to [`listen`](#listen)ers.
+* `data` - _Optional_ Data to send to [`listen`](#listen)ers. Can be any of `boolean`, `string`, `array` or `object`.
+* `options` - _Optional_ Like [`req`](#req), supply an object here to explicitly define certain options for the AMQ message.
+
+### Examples
+
+```javascript
+// Emits the 'user.registered' event to all listeners
+remit.emit('user.registered')
+```
+
+```javascript
+// Emits the 'user.registered' event, supplying some of the user's basic information
+remit.emit('user.registered', {
+	username: 'jacob123',
+    name: 'Jacob Four',
+    email: 'jacob@five.com',
+    website: 'www.six.com'
+})
+```
+
+### AMQ behaviour
+
+1. Confirms connection and exchange exists.
+2. Publish the message using the provided `endpoint` as a routing key and with the `broadcast` option set to `true`.
+
+## demit(event, eta, [data], [options])
+
+Like [`emit`](#emit) but tells [`listen`](#listen)ers to wait until `eta` to running their respective functions. Similar in design and functionality to [Celery's `eta` usage](http://docs.celeryproject.org/en/latest/userguide/calling.html#eta-and-countdown). Largely useful for tasks that should repeat like session health checks.
+
+### Arguments
+
+* `event` - The "event" to emit to [`listen`](#listen)ers.
+* `eta` - A `date` object being the earliest time you wish listeners to respond to the emission.
+* `data` - _Optional_ Data to send to [`listen`](#listen)ers. Can be any of `boolean`, `string`, `array` or `object`.
+* `options` - _Optional_ Like [`req`](#req), supply an object here to explicitly define certain options for the AMQ message.
+
+### Examples
+
+```javascript
+// Emits a "health.check" event that should be processed in 24 hours
+let tomorrow = new Date()
+tomorrow.setDate(tomorrow.getDate() + 1)
+
+remit.demit('health.check', tomorrow)
+```
+
+```javascript
+// Emits a "health.check" event that should be processed in 24 hours, providing some relevant data
+let tomorrow = new Date()
+tomorrow.setDate(tomorrow.getDate() + 1)
+
+remit.demit('health.check', tomorrow, {
+	current_health: 52
+})
+```
+
+### AMQ behaviour
+
+Like [`emit`](#emit) but adds a `timestamp` field to the message which is understood by [`listen`](#listen)-based functions.
+
+## listen(event, callback, [context], [options = {queueName: 'my_queue'}])
+
+Listens to events emitted using [`emit`](#emit). Listeners are grouped for load balancing using their `name` provided when instantiating Remit.
+
+While listeners can't sent data back to the [`emit`](#emit)ter, calling the `callback` is still required for confirming successful message delivery.
+
+### Arguments
+
+* `event` - The "event" to listen for emissions of.
+* `callback(args, done)` - A callback containing data from the emitter in `args` and requiring the running of `done(err)` to signify completion.
+* `context` - _Optional_ The context in which `callback(args, done)` will be called.
+* `options` - _Optional_ An object that can contain a custom queue to listen for messages on.
+
+### Examples
+
+```javascript
+// Listens for the "user.registered" event, logging the outputted data
+remit.listen('user.registered', function (args, done) {
+	console.log('User registered!', args)
+    
+    return done()
+})
+```
+
+### AMQ behaviour
+
+1. Confirms connection and exchange exists.
+2. Sets a service-unique queue name and confirms it exists
+3. Binds the queue to the routing key defined by `event` and starts consuming from said queue
 
 # Improvements
 
@@ -190,11 +407,11 @@ remit.listen('user.#', function (args) {
 
 * Ability to specify exchange per connection, endpoint or event
 * Cleaner error handling (along with some standards)
-* Removal of all use of `process.exit()`
+* ~~Removal of all use of `process.exit()`~~
 * Connection retrying when losing connection to the AMQ
 * Use promises instead of callbacks
 * Warnings for duplicate `req` subscriptions
-* Better handling of `req` timeouts
+* ~~Better handling of `req` timeouts~~
 * Ability for emissions to receive (multiple) results from listeners if required (I really want to use generators for this)
 * Obey the `JSON-RPC 2.0` spec
 * Tests!
