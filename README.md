@@ -72,7 +72,7 @@ remit.listen('something.#', function (args) {
 # Pre-requisites
 
 To use `remit` you'll need:
-* A _RabbitMQ_ server
+* A _RabbitMQ_ server (_Remit_ `1.2.0+` requires `>=3.4.0`)
 * _Node v4.x.x_
 * _npm_
 
@@ -413,7 +413,7 @@ remit.listen('user.registered', function (args, done) {
 * Cleaner error handling (along with some standards)
 * ~~Removal of all use of `process.exit()`~~
 * Connection retrying when losing connection to the AMQ
-* Use promises instead of callbacks
+* ~~Use promises instead of callbacks~~
 * Warnings for duplicate `req` subscriptions
 * ~~Better handling of `req` timeouts~~
 * Ability for emissions to receive (multiple) results from listeners if required (I really want to use generators for this)
