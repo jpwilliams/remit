@@ -2,6 +2,7 @@
 
 const os = require('os')
 const uuid = require('node-uuid').v4
+const trace = require('stack-trace')
 const amqplib = require('amqplib')
 
 module.exports = function (opts) {
@@ -99,11 +100,15 @@ Remit.prototype.res = function res (event, callback, context, options) {
 
 
 
-Remit.prototype.req = function req (event, args, callback, options) {
+Remit.prototype.req = function req (event, args, callback, options, caller) {
     const self = this
     
     if (!options) {
         options = {}
+    }
+
+    if (!caller) {
+        caller = trace.get(Remit.prototype.req)[0].toString()
     }
     
     self.__connect(() => {
@@ -137,6 +142,9 @@ Remit.prototype.req = function req (event, args, callback, options) {
                 options.mandatory = true
                 options.replyTo = 'amq.rabbitmq.reply-to'
                 options.correlationId = correlation_id
+                options.appId = self._service_name
+                options.messageId = caller
+                options.type = event
                 
                 self._results_timeouts[correlation_id] = setTimeout(function () {
                     if (!self._results_callbacks[correlation_id]) {
@@ -203,8 +211,10 @@ Remit.prototype.emit = function emit (event, args, options) {
     
     options.broadcast = true
     options.autoDeleteCallback = options.ttl ? false : true
+
+    const caller = trace.get(Remit.prototype.emit)[0].toString()
     
-    self.req.call(self, event, args, options.onResponse, options)
+    self.req.call(self, event, args, options.onResponse, options, caller)
 }
 
 
@@ -225,8 +235,10 @@ Remit.prototype.demit = function demit (event, delay, args, options) {
     if (Object.prototype.toString.call(delay) === '[object Date]') {
         options.timestamp = delay.getTime()
     }
+
+    const caller = trace.get(Remit.prototype.demit)[0].toString()
     
-    self.req.call(self, event, args, options.onResponse, options)
+    self.req.call(self, event, args, options.onResponse, options, caller)
 }
 
 
@@ -248,8 +260,10 @@ Remit.prototype.treq = function treq (event, args, callback, options) {
     if (!options.timeout) {
         options.timeout = 5000
     }
+
+    const caller = trace.get(Remit.prototype.treq)[0].toString()
     
-    self.req(event, args, callback, options)
+    self.req(event, args, callback, options, caller)
 }
 
 
@@ -398,16 +412,22 @@ Remit.prototype.__consume_res = function __consume_res (message, callback, conte
     let data
     
     try {
-        data = JSON.parse(message.content.toString())
+        data = JSON.parse(message.content.toString())        
     } catch (e) {
         return self._channel.nack(message, false, false)
+    }
+
+    const extra = {
+        service: message.properties.appId,
+        event: message.properties.type,
+        caller: message.properties.messageId
     }
 
     if (!message.properties.correlationId || !message.properties.replyTo) {
         try {
             callback.call(context, data, function (err) {
                 self._channel.ack(message)
-            })
+            }, extra)
         } catch (e) {
             if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                 self._channel.nack(message, false, false)
@@ -431,7 +451,7 @@ Remit.prototype.__consume_res = function __consume_res (message, callback, conte
 
                 self._channel.publish('', message.properties.replyTo, new Buffer(JSON.stringify(Array.prototype.slice.call(arguments))), options)
                 self._channel.ack(message)
-            })
+            }, extra)
         } catch (e) {
             if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                 self._channel.nack(message, false, false)
