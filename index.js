@@ -20,6 +20,7 @@ function Remit (opts) {
     // Exposed items
     this._service_name = opts.name || ''
     this._url = opts.url || 'amqp://localhost'
+    this._trace = opts.trace === false ? false : true
     
     // Global items
     this._connection = opts.connection || null
