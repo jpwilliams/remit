@@ -108,8 +108,14 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
         options = {}
     }
 
-    if (self._trace && !caller) {
-        caller = trace.get(Remit.prototype.req)[0].toString()
+    if (self._trace) {
+        if (!caller) {
+            caller = trace.get(Remit.prototype.req)[0].toString()
+        }
+        
+        options.appId = self._service_name
+        options.messageId = caller
+        options.type = event
     }
     
     self.__connect(() => {
@@ -143,12 +149,6 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
                 options.mandatory = true
                 options.replyTo = 'amq.rabbitmq.reply-to'
                 options.correlationId = correlation_id
-
-                if (self._trace) {
-                    options.appId = self._service_name
-                    options.messageId = caller
-                    options.type = event
-                }
                 
                 self._results_timeouts[correlation_id] = setTimeout(function () {
                     if (!self._results_callbacks[correlation_id]) {
