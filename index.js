@@ -108,7 +108,7 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
         options = {}
     }
 
-    if (!caller) {
+    if (self._trace && !caller) {
         caller = trace.get(Remit.prototype.req)[0].toString()
     }
     
@@ -143,9 +143,12 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
                 options.mandatory = true
                 options.replyTo = 'amq.rabbitmq.reply-to'
                 options.correlationId = correlation_id
-                options.appId = self._service_name
-                options.messageId = caller
-                options.type = event
+
+                if (self._trace) {
+                    options.appId = self._service_name
+                    options.messageId = caller
+                    options.type = event
+                }
                 
                 self._results_timeouts[correlation_id] = setTimeout(function () {
                     if (!self._results_callbacks[correlation_id]) {
@@ -213,7 +216,11 @@ Remit.prototype.emit = function emit (event, args, options) {
     options.broadcast = true
     options.autoDeleteCallback = options.ttl ? false : true
 
-    const caller = trace.get(Remit.prototype.emit)[0].toString()
+    let caller
+
+    if (self._trace) {
+        caller = trace.get(Remit.prototype.emit)[0].toString()
+    }
     
     self.req.call(self, event, args, options.onResponse, options, caller)
 }
@@ -237,7 +244,11 @@ Remit.prototype.demit = function demit (event, delay, args, options) {
         options.timestamp = delay.getTime()
     }
 
-    const caller = trace.get(Remit.prototype.demit)[0].toString()
+    let caller
+
+    if (self._trace) {
+        caller = trace.get(Remit.prototype.demit)[0].toString()
+    }
     
     self.req.call(self, event, args, options.onResponse, options, caller)
 }
@@ -262,7 +273,11 @@ Remit.prototype.treq = function treq (event, args, callback, options) {
         options.timeout = 5000
     }
 
-    const caller = trace.get(Remit.prototype.treq)[0].toString()
+    let caller
+
+    if (self._trace) {
+        caller = trace.get(Remit.prototype.treq)[0].toString()
+    }
     
     self.req(event, args, callback, options, caller)
 }
