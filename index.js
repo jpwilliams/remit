@@ -500,6 +500,13 @@ Remit.prototype.__on_result = function __on_result (message) {
     if (!Array.isArray(data)) data = [data]
     
     delete self._results_timeouts[message.properties.correlationId]
+
+    // If it turns out we don't have a callback here (this can
+    // happen if the timeout manages to get there first) then
+    // let's exit before we get ourselves into trouble.
+    if (!callback) {
+        return
+    }
     
     try {
         callback.callback.apply(callback.context, data)
