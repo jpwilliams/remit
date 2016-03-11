@@ -80,7 +80,7 @@ Remit.prototype.res = function res (event, callback, context, options) {
                     } else {
                         const time_to_wait = parseInt(message.properties.timestamp - new Date().getTime())
                         
-                        if (time_to_wait < 0) {
+                        if (time_to_wait <= 0) {
                             self.__consume_res(message, callback, context)
                         } else {
                             setTimeout(() => {
