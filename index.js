@@ -54,7 +54,7 @@ Remit.prototype.on_error = null
 
 
 
-Remit.prototype.res = function res (event, callback, context, options) {
+Remit.prototype.res = function res (event, callbacks, context, options) {
     const self = this
     
     // Set up default options if we haven't been given any.
@@ -76,15 +76,15 @@ Remit.prototype.res = function res (event, callback, context, options) {
             self._channel.bindQueue(chosen_queue, 'remit', event).then(() => {
                 self._channel.consume(chosen_queue, (message) => {
                     if (!message.properties.timestamp) {
-                        self.__consume_res(message, callback, context)
+                        self.__consume_res(message, callbacks, context)
                     } else {
                         const time_to_wait = parseInt(message.properties.timestamp - new Date().getTime())
                         
                         if (time_to_wait <= 0) {
-                            self.__consume_res(message, callback, context)
+                            self.__consume_res(message, callbacks, context)
                         } else {
                             setTimeout(() => {
-                                self.__consume_res(message, callback, context)
+                                self.__consume_res(message, callbacks, context)
                             }, time_to_wait)
                         }
                     }
@@ -422,7 +422,7 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
 
 
 
-Remit.prototype.__consume_res = function __consume_res (message, callback, context) {
+Remit.prototype.__consume_res = function __consume_res (message, callbacks, context) {
     const self = this
     
     let data
@@ -440,10 +440,12 @@ Remit.prototype.__consume_res = function __consume_res (message, callback, conte
     }
 
     if (!message.properties.correlationId || !message.properties.replyTo) {
+        function done (err, data) {
+            self._channel.ack(message)
+        }
+
         try {
-            callback.call(context, data, function (err) {
-                self._channel.ack(message)
-            }, extra)
+            step_through_callbacks(callbacks, data, extra, done)
         } catch (e) {
             if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                 self._channel.nack(message, false, false)
@@ -461,13 +463,15 @@ Remit.prototype.__consume_res = function __consume_res (message, callback, conte
             }
         }
     } else {
-        try {
-            callback.call(context, data, function (err, data) {
-                const options = {correlationId: message.properties.correlationId}
+        function done (err, data) {
+            const options = {correlationId: message.properties.correlationId}
 
-                self._channel.publish('', message.properties.replyTo, new Buffer(JSON.stringify(Array.prototype.slice.call(arguments))), options)
-                self._channel.ack(message)
-            }, extra)
+            self._channel.publish('', message.properties.replyTo, new Buffer(JSON.stringify(Array.prototype.slice.call(arguments))), options)
+            self._channel.ack(message)
+        }
+
+        try {
+            step_through_callbacks(callbacks, data, extra, done)
         } catch (e) {
             if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                 self._channel.nack(message, false, false)
@@ -544,4 +548,46 @@ function increment_headers (headers) {
     headers.attempts = parseInt(headers.attempts) + 1
     
     return headers
+}
+
+
+
+
+
+
+function step_through_callbacks (callbacks, args, extra, done, index) {
+    args = args || {}
+    extra = extra || {}
+
+    if (!index) {
+        index = 0
+
+        if (!Array.isArray(callbacks)) {
+            return callbacks(args, done, extra)
+        }
+
+        if (callbacks.length === 1) {
+            return callbacks[0](args, done, extra)
+        }
+
+        return callbacks[index](args, (err, args) => {
+            if (err) {
+                return done(err, args)
+            }
+
+            return step_through_callbacks(callbacks, args, extra, done, ++index)
+        }, extra)
+    }
+
+    if (!callbacks[index]) {
+        return done(null, args)
+    }
+
+    return callbacks[index](args, (err, args) => {
+        if (err) {
+            return done(err, args)
+        }
+
+        return step_through_callbacks(callbacks, args, extra, done, ++index)
+    }, extra)
 }
