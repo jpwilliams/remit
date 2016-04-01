@@ -27,7 +27,7 @@ function Remit (opts) {
     this._consume_channel = null
     this._publish_channel = null
     this._work_channel = null
-    this._exchange = opts.exchange || null
+    this._exchange = opts.exchange || 'remit'
     
     // Callback queues
     this._connection_callbacks = []
@@ -81,7 +81,7 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
             })
             
             self.__use_consume_channel(() => {  
-                self._consume_channel.bindQueue(chosen_queue, 'remit', event).then(() => {
+                self._consume_channel.bindQueue(chosen_queue, self._exchange, event).then(() => {
                     self._consume_channel.consume(chosen_queue, (message) => {
                         if (!message.properties.timestamp) {
                             self.__consume_res(message, callbacks, context)
@@ -131,7 +131,7 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
         self.__assert_exchange(() => {
             if (!callback) {
                 return self.__use_publish_channel(() => {
-                    self._publish_channel.publish('remit', event, new Buffer(JSON.stringify(args || {})), options)
+                    self._publish_channel.publish(self._exchange, event, new Buffer(JSON.stringify(args || {})), options)
                 })
             }
             
@@ -188,7 +188,7 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
                 }, options.timeout || 5000)
                 
                 self.__use_publish_channel(() => {
-                    self._publish_channel.publish('remit', event, new Buffer(JSON.stringify(args || {})), options)
+                    self._publish_channel.publish(self._exchange, event, new Buffer(JSON.stringify(args || {})), options)
                 })
             }
         })
@@ -572,7 +572,7 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
     
     // Let's try making this exchange!
     self.__use_work_channel(() => {
-        self._work_channel.assertExchange('remit', 'topic', {
+        self._work_channel.assertExchange(self._exchange, 'topic', {
             autoDelete: true
         }).then(() => {
             // Everything went awesome so we'll let everything
