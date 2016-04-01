@@ -348,10 +348,8 @@ Remit.prototype.__connect = function __connect (callback) {
 
         // Time to run the callbacks. Let's run them and
         // take them out of the queue.
-        const len = self._connection_callbacks.length
-        
         // Loop through and make everything happen!
-        for (var i = 0; i < len; i++) {
+        while (self._connection_callbacks.length > 0) {
             self._connection_callbacks[0]()
             self._connection_callbacks.shift()
         }
@@ -401,13 +399,11 @@ Remit.prototype.__use_consume_channel = function __use_consume_channel (callback
 
             self._consume_channel = channel
 
-        const len = self._consume_channel_callbacks.length
-        
-        // Loop through and make everything happen!
-        for (var i = 0; i < len; i++) {
-            self._consume_channel_callbacks[0]()
-            self._consume_channel_callbacks.shift()
-        }
+            // Loop through and make everything happen!
+            while (self._consume_channel_callbacks.length > 0) {
+                self._consume_channel_callbacks[0]()
+                self._consume_channel_callbacks.shift()
+            }
         })
     })
 }
@@ -455,10 +451,8 @@ Remit.prototype.__use_publish_channel = function __use_publish_channel (callback
 
             self._publish_channel = channel
 
-            const len = self._publish_channel_callbacks.length
-            
             // Loop through and make everything happen!
-            for (var i = 0; i < len; i++) {
+            while (self._publish_channel_callbacks.length > 0) {
                 self._publish_channel_callbacks[0]()
                 self._publish_channel_callbacks.shift()
             }
@@ -509,10 +503,8 @@ Remit.prototype.__use_work_channel = function __use_work_channel (callback) {
 
             self._work_channel = channel
 
-            const len = self._work_channel_callbacks.length
-            
             // Loop through and make everything happen!
-            for (var i = 0; i < len; i++) {
+            while (self._work_channel_callbacks.length > 0) {
                 self._work_channel_callbacks[0]()
                 self._work_channel_callbacks.shift()
             }
@@ -565,7 +557,7 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
     // Let's try making this exchange!
     self.__use_work_channel(() => {
         self._work_channel.assertExchange(self._exchange_name, 'topic', {
-            autoDelete: false
+            autoDelete: true
         }).then(() => {
             // Everything went awesome so we'll let everything
             // know that the exchange is up.
@@ -573,10 +565,8 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
             
             // Time to run any callbacks that were waiting on
             // this exchange being made.
-            const len = self._exchange_callbacks.length
-            
             // Loop through and make everything happen!
-            for (var i = 0; i < len; i++) {
+            while (self._exchange_callbacks.length > 0) {
                 self._exchange_callbacks[0]()
                 self._exchange_callbacks.shift()
             }
