@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha ./test/index.js -w --debug",
-    "coverage": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- tests/index.js --timeout=60000"
+    "coverage": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- ./test/index.js --timeout=60000"
   },
   "author": "Jack Williams <jack@tagstr.co>",
   "license": "ISC",
