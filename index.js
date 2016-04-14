@@ -8,6 +8,7 @@ const Emitter = require('events').EventEmitter
 
 module.exports = function (opts) {
     const remit = new Emitter()
+    remit.__event_emit = remit.emit
 
     if (!opts) opts = {}
 
@@ -47,7 +48,7 @@ module.exports = function (opts) {
 
 
 
-    remit.res = function res (event, callbacks, context, options) {
+    remit.res = function res (event, callbacks, context, options, skip_reply) {
         const self = this
 
         // Set up default options if we haven't been given any.
@@ -68,7 +69,11 @@ module.exports = function (opts) {
                         durable: true,
                         autoDelete: false
                     }).then((queue) => {
-                        emitter.emit('ready')
+                        try {
+                            emitter.emit('ready')
+                        } catch (e) {
+                            self.__event_emit('error', e)
+                        }
                     })
                 })
 
@@ -76,15 +81,15 @@ module.exports = function (opts) {
                     self._consume_channel.bindQueue(chosen_queue, self._exchange_name, event).then(() => {
                         self._consume_channel.consume(chosen_queue, (message) => {
                             if (!message.properties.timestamp) {
-                                self.__consume_res(message, callbacks, emitter)
+                                self.__consume_res(message, callbacks, emitter, !!skip_reply)
                             } else {
                                 const time_to_wait = parseInt(message.properties.timestamp - new Date().getTime())
 
                                 if (time_to_wait <= 0) {
-                                    self.__consume_res(message, callbacks, emitter)
+                                    self.__consume_res(message, callbacks, emitter, !!skip_reply)
                                 } else {
                                     setTimeout(() => {
-                                        self.__consume_res(message, callbacks, emitter)
+                                        self.__consume_res(message, callbacks, emitter, !!skip_reply)
                                     }, time_to_wait)
                                 }
                             }
@@ -105,15 +110,13 @@ module.exports = function (opts) {
 
 
     remit.req = function req (event, args, callback, options, caller) {
-        console.log('req hit', caller)
+        console.log('req hit', event)
 
         const self = this
 
         if (!options) {
             options = {}
         }
-
-        options.mandtory = true
 
         if (self._trace) {
             if (!caller) {
@@ -141,7 +144,13 @@ module.exports = function (opts) {
 
                     return self.__use_publish_channel(() => {
                         self._publish_channel.publish(self._exchange_name, event, new Buffer(JSON.stringify(args || {})), options)
-                        emitter.emit('sent')
+
+                        try {
+                            emitter.emit('sent')
+                        } catch (e) {
+                            emitter.emit('error')
+                            self.__event_emit('error', e)
+                        }
                     })
                 }
 
@@ -175,7 +184,7 @@ module.exports = function (opts) {
                     options.replyTo = 'amq.rabbitmq.reply-to'
                     options.correlationId = correlation_id
 
-                    emitter.on('__timeout', function (has_route) {
+                    emitter.on('__timeout', (has_route) => {
                         clearTimeout(self._results_timeouts[correlation_id])
                         delete self._results_timeouts[correlation_id]
 
@@ -186,7 +195,12 @@ module.exports = function (opts) {
                         }
 
                         if (local_emitter.got_result) {
-                            local_emitter.emit('closed')
+                            try {
+                                local_emitter.emit('closed')
+                            } catch (e) {
+                                local_emitter.emit('error', e)
+                                self.__event_emit('error', e)
+                            }
 
                             return
                         }
@@ -198,13 +212,33 @@ module.exports = function (opts) {
                             message: has_route ? `Timed out after no response for ${options.timeout || 5000}ms` : `No route found for message.`
                         }
 
-                        local_emitter.emit('timeout', data)
+                        try {
+                            local_emitter.emit('timeout', data)
+                            self.__event_emit('timeout', data)
 
-                        self.emit('timeout', data)
-                        local_emitter.emit('closed')
+                            local_emitter.emit('fail', data)
+                            self.__event_emit('fail', data)
+                        } catch (e) {
+                            local_emitter.emit('error', e)
+                            self.__event_emit('error', e)
+                        }
+
+                        console.log('Oh. Carried on.')
+
+                        try {
+                            local_emitter.emit('closed')
+                        } catch (e) {
+                            local_emitter.emit('error', e)
+                            self.__event_emit('error', e)
+                        }
 
                         if (callback) {
-                            local_emitter.emit('reply', data)
+                            try {
+                                local_emitter.emit('reply', data)
+                            } catch (e) {
+                                local_emitter.emit('error', e)
+                                self.__event_emit('error', e)
+                            }
                         }
 
                         delete self._results_emitters[correlation_id]
@@ -216,7 +250,13 @@ module.exports = function (opts) {
 
                     self.__use_publish_channel(() => {
                         self._publish_channel.publish(self._exchange_name, event, new Buffer(JSON.stringify(args || {})), options)
-                        emitter.emit('sent')
+
+                        try {
+                            emitter.emit('sent')
+                        } catch (e) {
+                            emitter.emit('error', e)
+                            self.__event_emit('error', e)
+                        }
                     })
                 }
             })
@@ -243,7 +283,7 @@ module.exports = function (opts) {
 
         options.queueName = `${event}:emission:${self._service_name}:${++self._listener_count}`
 
-        return self.res.call(self, event, callback, context, options)
+        return self.res.call(self, event, callback, context, options, true)
     }
 
 
@@ -493,15 +533,20 @@ module.exports = function (opts) {
 
         self.__connect(() => {
             self._connection.createChannel().then((channel) => {
-                channel.on('error', (err) => {
-                    self._publish_channel = null
-                    self.__use_publish_channel()
-                })
-
-                channel.on('close', () => {
-                    self._publish_channel = null
-                    self.__use_publish_channel()
-                })
+                // channel.on('error', (err) => {
+                //     console.error(err.message)
+                //     console.error(err.stack)
+                //
+                //     console.log('Channel recovering...')
+                //
+                //     self._publish_channel = null
+                //     self.__use_publish_channel()
+                // })
+                //
+                // channel.on('close', () => {
+                //     self._publish_channel = null
+                //     self.__use_publish_channel()
+                // })
 
                 channel.on('return', (message) => {
                     // console.log('RETURNED ::', msg)
@@ -644,7 +689,7 @@ module.exports = function (opts) {
 
 
 
-    remit.__consume_res = function __consume_res (message, callbacks, emitter) {
+    remit.__consume_res = function __consume_res (message, callbacks, emitter, skip_reply) {
         const self = this
 
         let data
@@ -663,7 +708,7 @@ module.exports = function (opts) {
             caller: message.properties.messageId
         }
 
-        if (!message.properties.correlationId || !message.properties.replyTo) {
+        if (skip_reply || !message.properties.correlationId || !message.properties.replyTo) {
             function done (err, data) {
                 self.__use_consume_channel(() => {
                     self._consume_channel.ack(message)
@@ -800,10 +845,6 @@ module.exports = function (opts) {
         const self = this
 
         const emitter = self._results_emitters[message.properties.correlationId]
-        emitter.got_result = true
-
-        let data = JSON.parse(message.content.toString())
-        if (!Array.isArray(data)) data = [data]
 
         // If it turns out we don't have a callback here (this can
         // happen if the timeout manages to get there first) then
@@ -812,6 +853,10 @@ module.exports = function (opts) {
             return
         }
 
+        let data = JSON.parse(message.content.toString())
+        if (!Array.isArray(data)) data = [data]
+
+        emitter.got_result = true
         emitter.emit.apply(emitter, ['reply'].concat(data))
 
         if (!emitter.broadcast) {
