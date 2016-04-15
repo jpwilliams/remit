@@ -718,6 +718,9 @@ module.exports = function (opts) {
             try {
                 step_through_callbacks(callbacks, data, extra, done)
             } catch (e) {
+                emitter.emit('error', e)
+                self.__event_emit('error', e)
+
                 if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                     self.__use_consume_channel(() => {
                         self._consume_channel.nack(message, false, false)
@@ -791,8 +794,21 @@ module.exports = function (opts) {
             }
 
             try {
+                console.log('Stepping...')
                 step_through_callbacks(callbacks, data, extra, done)
             } catch (e) {
+                console.log('BOOM', e)
+                // throw e
+
+                try {
+                    emitter.emit('error', e)
+                } catch (x) {
+                    console.log('SHTIE TEIUHTE ::', x)
+                }
+                // self.__event_emit('error', e)
+
+                console.log('oh no')
+
                 if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                     self.__use_consume_channel(() => {
                         self._consume_channel.nack(message, false, false)

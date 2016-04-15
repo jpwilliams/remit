@@ -11,7 +11,7 @@ const domain = require('domain')
 module.exports = function init (opts) {
     opts = opts || {}
 
-    const remit = new Remit(opts)
+    const remit = new Remit(opts).setMaxListeners(0)
 
     return remit
 }
@@ -49,6 +49,7 @@ function Remit (opts) {
     this.once('__assert_exchange', this.__exchange)
     this.once('__assert_work_channel', this.__work_channel)
     this.once('__assert_publish_channel', this.__publish_channel)
+    this.once('__assert_consume_channel', this.__consume_channel)
 
     if (!this._lazy) {
         this.__emit('__assert_connection')
@@ -74,6 +75,11 @@ Remit.prototype.__assert_work_channel = require('./lib/internal/assertions/work_
 Remit.prototype.__publish_channel = require('./lib/internal/publish_channel')
 Remit.prototype.__assert_publish_channel = require('./lib/internal/assertions/publish_channel')
 
+Remit.prototype.__consume_channel = require('./lib/internal/consume_channel')
+Remit.prototype.__assert_consume_channel = require('./lib/internal/assertions/consume_channel')
+
 Remit.prototype.__build = require('./lib/internal/builder')
 Remit.prototype.__request = require('./lib/internal/request')
-Remit.prototype.__on_reply = require('./lib/internal/reply')
+Remit.prototype.__response = require('./lib/internal/response')
+Remit.prototype.__handle_message = require('./lib/internal/handle_message')
+Remit.prototype.__handle_reply = require('./lib/internal/handle_reply')
