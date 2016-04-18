@@ -19,6 +19,7 @@
 
 
 const debug = require('debug')('remit')
+const _ = require('lodash')
 
 // Grab Remit
 const remit = require('./new')({
@@ -34,17 +35,75 @@ const remit = require('./new')({
     // })
 // }
 
-remit.res('test.replies').on('message', (data) => {
-    console.log('Ooh! Got one! ::', data)
-}).on('ready', () => {
-    console.log('READY!')
+// remit.res('test.replies').on('message', (done, username, password) => {
+//
+// })
 
-    remit.req('test.replies', {
-        foo: 'bar'
-    }).on('reply', (err, data) => {
-        console.log('GOT! ::', err, data)
+remit.res('sum')
+    .on('message', (done, a, b, c, d, e) => {
+        try {
+            return done(null, _.reduce([a, b, c, d, e], (a, b) => {
+                return a + b
+            }))
+        } catch (e) {
+            return done(e)
+        }
     })
-})
+    .on('ready', () => {
+        remit.req('sum')
+            .send(15, 17, 29, 132, 1)
+            .on('reply', (err, result) => {
+                if (err) {
+                    return console.error('Fuck.', err)
+                }
+
+                console.log('The result was ::', result)
+            })
+    })
+
+
+// function foo () {
+//     const bar = remit.req('test.login')
+//         .send('jack', 'pass123')
+//         .on('reply', (err, user, success) => {
+//             console.log(success, 'Logged in ::', user)
+//         })
+// }
+//
+//
+// remit.res('test.login').on('message', (done, username, password) => {
+//     console.log(`Logging ${username} in with ${password}.`)
+//
+//     return done(null, {
+//         username: 'jack',
+//         email: 'jack@tagstr.co',
+//         follows: 14,
+//         tags: 2
+//     }, true)
+// }).on('ready', () => {
+//     foo()
+// })
+//
+// function foo () {
+//     remit.req('test.login', 'jack', 'shhpass123', (err, user, success) => {
+//         console.log('Logged in!')
+//         console.log(user)
+//         console.log(success)
+//     })
+//
+//
+//
+//
+//     remit.req('test.login')
+//         .send('jack', 'shhpass123')
+//         .on('reply', (err, user, success) => {
+//             console.log('Logged in!')
+//             console.log(user)
+//             console.log(success)
+//         })
+// }
+
+
 
 // setTimeout(() => {
 //     const hd = new memwatch.HeapDiff()
