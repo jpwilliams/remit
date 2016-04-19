@@ -11,6 +11,7 @@
   "dependencies": {
     "amqplib": "0.4.0",
     "debug": "2.2.0",
+    "eventemitter3": "^1.2.0",
     "node-uuid": "1.4.7",
     "stack-trace": "0.0.9"
   },

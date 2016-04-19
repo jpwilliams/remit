@@ -3,17 +3,13 @@
 const uuid = require('node-uuid').v4
 
 const util = require('util')
-const EventEmitter = require('events').EventEmitter
+const EventEmitter = require('eventemitter3')
 util.inherits(Remit, EventEmitter)
-
-const domain = require('domain')
 
 module.exports = function init (opts) {
     opts = opts || {}
 
-    const remit = new Remit(opts).setMaxListeners(0)
-
-    return remit
+    return new Remit(opts)
 }
 
 
@@ -35,6 +31,7 @@ function Remit (opts) {
     this._publish_channel_consuming = false
 
     // Internal storage
+    this._listener_count = 0
     this._waiting_emitters = {}
 
     this.req = require('./lib/req')
@@ -83,3 +80,4 @@ Remit.prototype.__request = require('./lib/internal/request')
 Remit.prototype.__response = require('./lib/internal/response')
 Remit.prototype.__handle_message = require('./lib/internal/handle_message')
 Remit.prototype.__handle_reply = require('./lib/internal/handle_reply')
+Remit.prototype.__set_timeout = require('./lib/internal/timeout')

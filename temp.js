@@ -26,6 +26,24 @@ const remit = require('./new')({
     lazy: false
 })
 
+// remit.listen('test.listen', (done) => {
+//     console.log('FUCKING HELL')
+//     done()
+// })
+
+remit.res('test.req')
+    .on('message', (done, arr, obj, boo, str) => {
+        const err = new Error('Shite')
+        console.log(err.stack)
+
+        done()
+    })
+    .on('ready', () => {
+        remit.req('test.req').on('reply', () => {
+            console.log('Back.')
+        })
+    })
+
 // setInterval(() => {
 // function foo() {
     // remit.req({event: 'test.replies'}).on('reply', () => {
@@ -38,28 +56,44 @@ const remit = require('./new')({
 // remit.res('test.replies').on('message', (done, username, password) => {
 //
 // })
+//
+// remit.res('sum')
+//     .on('message', (done, a, b, c, d, e) => {
+//         try {
+//             return done(null, _.reduce([a, b, c, d, e], (a, b) => {
+//                 return a + b
+//             }))
+//         } catch (e) {
+//             return done(e)
+//         }
+//     })
+//     .on('ready', () => {
+//         remit.req('sum')
+//             .send(15, 17, 29, 132, 1)
+//             .on('reply', (err, result) => {
+//                 if (err) {
+//                     return console.error('Fuck.', err)
+//                 }
+//
+//                 console.log('The result was ::', result)
+//             })
+//     })
 
-remit.res('sum')
-    .on('message', (done, a, b, c, d, e) => {
-        try {
-            return done(null, _.reduce([a, b, c, d, e], (a, b) => {
-                return a + b
-            }))
-        } catch (e) {
-            return done(e)
-        }
-    })
-    .on('ready', () => {
-        remit.req('sum')
-            .send(15, 17, 29, 132, 1)
-            .on('reply', (err, result) => {
-                if (err) {
-                    return console.error('Fuck.', err)
-                }
 
-                console.log('The result was ::', result)
-            })
-    })
+// remit.res('sum', (done, a, b, c, d, e) => {
+//     // console.log('ohhhh')
+//
+//     return done(null, a + b + c + d + e)
+// })
+//
+// function foo () {
+//     remit.req('sum', 15, 17, 29, 132, 1, (err, result) => {
+//         // console.log('The result was ::', result)
+//         foo()
+//     })
+// }
+//
+// foo()
 
 
 // function foo () {
