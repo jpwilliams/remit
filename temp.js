@@ -24,25 +24,29 @@ const _ = require('lodash')
 // Grab Remit
 const remit = require('./new')({
     lazy: false
-})
+})//.on('message', console.error)
 
 // remit.listen('test.listen', (done) => {
 //     console.log('FUCKING HELL')
 //     done()
 // })
 
-remit.res('test.req')
-    .on('message', (done, arr, obj, boo, str) => {
-        const err = new Error('Shite')
-        console.log(err.stack)
+remit.res('test.req', (done) => {done()})
+    // .on('message', (done) => {
+    //     done()
+    // })
+    // .on('ready', () => {
+    //     foo()
+    // })
 
-        done()
-    })
-    .on('ready', () => {
-        remit.req('test.req').on('reply', () => {
-            console.log('Back.')
+function foo () {
+    remit.req('test.req')
+        .on('reply', function () {
+            foo()
         })
-    })
+}
+
+foo()
 
 // setInterval(() => {
 // function foo() {
