@@ -26,12 +26,20 @@ const remit = require('./new')({
     lazy: false
 })//.on('message', console.error)
 
+remit.res('test.req', (done, obj, boo) => {
+    console.log('res hit:: ', obj, boo)
+    done({baz: 'quux'})
+})
+
+remit.req('test.req', {foo: 'bar'}, true)
+    .once('reply', console.log)
+
 // remit.listen('test.listen', (done) => {
 //     console.log('FUCKING HELL')
 //     done()
 // })
 
-remit.res('test.req', (done) => {done()})
+// remit.res('test.req', (done) => {done()})
     // .on('message', (done) => {
     //     done()
     // })
@@ -39,14 +47,14 @@ remit.res('test.req', (done) => {done()})
     //     foo()
     // })
 
-function foo () {
-    remit.req('test.req')
-        .on('reply', function () {
-            foo()
-        })
-}
-
-foo()
+// function foo () {
+//     remit.req('test.req')
+//         .on('reply', function () {
+//             foo()
+//         })
+// }
+//
+// foo()
 
 // setInterval(() => {
 // function foo() {
