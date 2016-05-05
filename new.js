@@ -46,6 +46,7 @@ function Remit (opts) {
     this.once('__assert_exchange', this.__exchange)
     this.once('__assert_work_channel', this.__work_channel)
     this.once('__assert_publish_channel', this.__publish_channel)
+    this.once('__assert_reply_consumption', this.__reply_consumption)
     this.once('__assert_consume_channel', this.__consume_channel)
 
     if (!this._lazy) {
@@ -71,6 +72,9 @@ Remit.prototype.__assert_work_channel = require('./lib/internal/assertions/work_
 
 Remit.prototype.__publish_channel = require('./lib/internal/publish_channel')
 Remit.prototype.__assert_publish_channel = require('./lib/internal/assertions/publish_channel')
+
+Remit.prototype.__reply_consumption = require('./lib/internal/reply_consumption')
+Remit.prototype.__assert_reply_consumption = require('./lib/internal/assertions/reply_consumption')
 
 Remit.prototype.__consume_channel = require('./lib/internal/consume_channel')
 Remit.prototype.__assert_consume_channel = require('./lib/internal/assertions/consume_channel')

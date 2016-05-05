@@ -22,22 +22,30 @@ const debug = require('debug')('remit')
 const _ = require('lodash')
 
 // Grab Remit
-const remit = require('./new')({
-    lazy: false
+const remit = require('./new')().on('error', (err) => {
+    throw err
 })//.on('message', console.error)
 
 remit.res('test.req', (done, obj, boo) => {
     console.log('res hit:: ', obj, boo)
-    done({baz: 'quux'})
+    done(obj, boo)
 })
 
-remit.req('test.req', {foo: 'bar'}, true)
-    .once('reply', console.log)
+var test_req = remit.req('test.req')
+test_req(true, false)
+test_req.send
 
-// remit.listen('test.listen', (done) => {
-//     console.log('FUCKING HELL')
-//     done()
-// })
+var foo = remit.req('test.req')
+    .on('reply', console.log)
+
+foo.send(true, false).on('reply', console.log)
+foo.send('yes', 'no')
+foo.send(1, 0)
+
+remit.listen('test.req', (done) => {
+    console.log('FUCKING HELL')
+    done()
+})
 
 // remit.res('test.req', (done) => {done()})
     // .on('message', (done) => {
