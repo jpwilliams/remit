@@ -792,7 +792,7 @@ function increment_headers (headers) {
 
 
 function step_through_callbacks (callbacks, args, extra, done, index) {
-    args = args || {}
+    args = args !== undefined ? args : {}
     extra = extra || {}
 
     if (!index) {
