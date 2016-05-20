@@ -764,7 +764,7 @@ module.exports = function (opts) {
         } else {
             function done (err, data) {
                 const options = {correlationId: message.properties.correlationId}
-                const res_data = new Buffer(JSON.stringify(Array.prototype.slice.call(arguments)))
+                const res_data = new Buffer(JSON.stringify(Array.from(arguments)))
 
                 function check_and_publish () {
                     self.__use_work_channel(() => {
