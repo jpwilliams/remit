@@ -16,35 +16,35 @@ module.exports = function (opts) {
 
 function Remit (opts) {
     if (!opts) opts = {}
-    
+
     // Exposed items
     this._service_name = opts.name || ''
     this._url = opts.url || 'amqp://localhost'
     this._trace = opts.trace === false ? false : true
     this._exchange_name = opts.exchange || 'remit'
-    
+
     // Global items
     this._connection = opts.connection || null
     this._consume_channel = null
     this._publish_channel = null
     this._work_channel = null
     this._exchange = null
-    
+
     // Callback queues
     this._connection_callbacks = []
     this._exchange_callbacks = []
     this._consume_channel_callbacks = []
     this._publish_channel_callbacks = []
     this._work_channel_callbacks = []
-    
+
     // Callback trackers
     this._results_callbacks = {}
     this._results_timeouts = {}
-    
+
     // States
     this._consuming_results = false
     this._listener_count = 0
-    
+
     return this
 }
 
@@ -62,16 +62,16 @@ Remit.prototype.on_error = null
 
 Remit.prototype.res = function res (event, callbacks, context, options) {
     const self = this
-    
+
     // Set up default options if we haven't been given any.
     if (!options) {
         options = {}
     }
-    
+
     self.__connect(() => {
         self.__assert_exchange(() => {
             const chosen_queue = options.queueName || event
-            
+
             self.__use_consume_channel(() => {
                 // TODO Check this for a valid response
                 self._consume_channel.assertQueue(chosen_queue, {
@@ -80,7 +80,7 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
                     autoDelete: false
                 })
             })
-            
+
             self.__use_consume_channel(() => {
                 self._consume_channel.bindQueue(chosen_queue, self._exchange_name, event).then(() => {
                     self._consume_channel.consume(chosen_queue, (message) => {
@@ -88,7 +88,7 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
                             self.__consume_res(message, callbacks, context)
                         } else {
                             const time_to_wait = parseInt(message.properties.timestamp - new Date().getTime())
-                            
+
                             if (time_to_wait <= 0) {
                                 self.__consume_res(message, callbacks, context)
                             } else {
@@ -113,7 +113,7 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
 
 Remit.prototype.req = function req (event, args, callback, options, caller) {
     const self = this
-    
+
     if (!options) {
         options = {}
     }
@@ -122,12 +122,12 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
         if (!caller) {
             caller = trace.get(Remit.prototype.req)[0].toString()
         }
-        
+
         options.appId = self._service_name
         options.messageId = caller
         options.type = event
     }
-    
+
     self.__connect(() => {
         self.__assert_exchange(() => {
             if (!callback) {
@@ -135,7 +135,7 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
                     self._publish_channel.publish(self._exchange_name, event, new Buffer(JSON.stringify(args || {})), options)
                 })
             }
-            
+
             if (!self._consuming_results) {
                 self._consuming_results = true
 
@@ -150,28 +150,28 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
             } else {
                 send_message()
             }
-            
+
             function send_message () {
                 const correlation_id = uuid()
-                
+
                 self._results_callbacks[correlation_id] = {
                     callback: callback,
                     context: null,
                     autoDeleteCallback: true
                 }
-                
+
                 options.mandatory = true
                 options.replyTo = 'amq.rabbitmq.reply-to'
                 options.correlationId = correlation_id
-                
+
                 self._results_timeouts[correlation_id] = setTimeout(function () {
                     if (!self._results_callbacks[correlation_id]) {
                         return
                     }
-                    
+
                     delete self._results_callbacks[correlation_id]
                     delete self._results_timeouts[correlation_id]
-                    
+
                     try {
                         callback({
                             event: event,
@@ -187,7 +187,7 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
                         }
                     }
                 }, options.timeout || 5000)
-                
+
                 self.__use_publish_channel(() => {
                     self._publish_channel.publish(self._exchange_name, event, new Buffer(JSON.stringify(args || {})), options)
                 })
@@ -203,17 +203,17 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
 
 Remit.prototype.listen = function listen (event, callback, context, options) {
     const self = this
-    
+
     if (!self._service_name) {
         throw new Error('Must provide a service name if listening')
     }
-    
+
     if (!options) {
         options = {}
     }
-    
+
     options.queueName = `${event}:emission:${self._service_name}:${++self._listener_count}`
-    
+
     self.res.call(self, event, callback, context, options)
 }
 
@@ -224,11 +224,11 @@ Remit.prototype.listen = function listen (event, callback, context, options) {
 
 Remit.prototype.emit = function emit (event, args, options) {
     const self = this
-    
+
     if (!options) {
         options = {}
     }
-    
+
     options.broadcast = true
     options.autoDeleteCallback = options.ttl ? false : true
 
@@ -237,7 +237,7 @@ Remit.prototype.emit = function emit (event, args, options) {
     if (self._trace) {
         caller = trace.get(Remit.prototype.emit)[0].toString()
     }
-    
+
     self.req.call(self, event, args, options.onResponse, options, caller)
 }
 
@@ -248,14 +248,14 @@ Remit.prototype.emit = function emit (event, args, options) {
 
 Remit.prototype.demit = function demit (event, delay, args, options) {
     const self = this
-    
+
     if (!options) {
         options = {}
     }
-    
+
     options.broadcast = true
     options.autoDeleteCallback = options.ttl ? false : true
-    
+
     if (Object.prototype.toString.call(delay) === '[object Date]') {
         options.timestamp = delay.getTime()
     }
@@ -265,7 +265,7 @@ Remit.prototype.demit = function demit (event, delay, args, options) {
     if (self._trace) {
         caller = trace.get(Remit.prototype.demit)[0].toString()
     }
-    
+
     self.req.call(self, event, args, options.onResponse, options, caller)
 }
 
@@ -276,15 +276,15 @@ Remit.prototype.demit = function demit (event, delay, args, options) {
 
 Remit.prototype.treq = function treq (event, args, callback, options) {
     const self = this
-    
+
     if (!options) {
         options = {}
     }
-    
+
     if (!options.expiration) {
         options.expiration = 5000
     }
-    
+
     if (!options.timeout) {
         options.timeout = 5000
     }
@@ -294,7 +294,7 @@ Remit.prototype.treq = function treq (event, args, callback, options) {
     if (self._trace) {
         caller = trace.get(Remit.prototype.treq)[0].toString()
     }
-    
+
     self.req(event, args, callback, options, caller)
 }
 
@@ -305,13 +305,13 @@ Remit.prototype.treq = function treq (event, args, callback, options) {
 
 Remit.prototype.__connect = function __connect (callback) {
     const self = this
-    
+
     // If no callback was given, we still pretend there
     // is one. We use this to signify queue presence.
     if (!callback) {
         callback = function () {}
     }
-    
+
     // If a connection already exists
     if (self._connection) {
         // If there are still callbacks being processed,
@@ -319,27 +319,27 @@ Remit.prototype.__connect = function __connect (callback) {
         // Be British and get in line!
         if (self._connection_callbacks.length) {
             self._connection_callbacks.push(callback)
-            
+
             return
         }
-        
+
         // Otherwise we do need to trigger now. We missed
         // the queue. #awkward
         return callback()
     }
-    
+
     // If we're here, a connection doesn't currently exist.
     // Now we check whether we're the first call to do this.
     // If we are, we'll be the ones to try and connect.
     const first = !self._connection_callbacks.length
-    
+
     // Push our callback in to the queue, eh?
     self._connection_callbacks.push(callback)
-    
+
     if (!first) {
         return
     }
-    
+
     // So let's connect!
     amqplib.connect(self._url).then((connection) => {
         // Everything's go fine, so we'll set this global
@@ -519,13 +519,13 @@ Remit.prototype.__use_work_channel = function __use_work_channel (callback) {
 
 Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
     const self = this
-    
+
     // If no callback was given, we still pretend there
     // is one. We use this to signify queue presence.
     if (!callback) {
         callback = function () {}
     }
-    
+
     // If the exchange already exists
     if (self._exchange) {
         // If there are still callbacks being processed,
@@ -533,27 +533,27 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
         // Be British and get in line!
         if (self._exchange_callbacks.length) {
             self._exchange_callbacks.push(callback)
-            
+
             return
         }
-        
+
         // Otherwise we do need to trigger now. We missed
         // the queue. #awkward
         return callback()
     }
-    
+
     // If we're here, an exchange doesn't currently exist.
     // Now we check whether we're the first call to do this.
     // If we are, we'll be the ones to try and connect.
     const first = !self._exchange_callbacks.length
-    
+
     // Push our callback in to the queue, eh?
     self._exchange_callbacks.push(callback)
-    
+
     if (!first) {
         return
     }
-    
+
     // Let's try making this exchange!
     self.__use_work_channel(() => {
         self._work_channel.assertExchange(self._exchange_name, 'topic', {
@@ -562,7 +562,7 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
             // Everything went awesome so we'll let everything
             // know that the exchange is up.
             self._exchange = true
-            
+
             // Time to run any callbacks that were waiting on
             // this exchange being made.
             // Loop through and make everything happen!
@@ -581,11 +581,11 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
 
 Remit.prototype.__consume_res = function __consume_res (message, callbacks, context) {
     const self = this
-    
+
     let data
-    
+
     try {
-        data = JSON.parse(message.content.toString())        
+        data = JSON.parse(message.content.toString())
     } catch (e) {
         return self.__use_consume_channel(() => {
             self._consume_channel.nack(message, false, false)
@@ -641,7 +641,7 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
 
                 check_and_republish()
             }
-            
+
             if (self.on_error) {
                 self.on_error(e)
             } else {
@@ -689,7 +689,7 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                 })
             } else {
                 message.properties.headers = increment_headers(message.properties.headers)
-                
+
                 function check_and_republish () {
                     self.__use_work_channel(() => {
                         self._work_channel.checkQueue(message.properties.replyTo).then(() => {
@@ -733,12 +733,12 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
 
 Remit.prototype.__on_result = function __on_result (message) {
     const self = this
-    
+
     const callback = self._results_callbacks[message.properties.correlationId]
-    
+
     let data = JSON.parse(message.content.toString())
     if (!Array.isArray(data)) data = [data]
-    
+
     delete self._results_timeouts[message.properties.correlationId]
 
     // If it turns out we don't have a callback here (this can
@@ -747,19 +747,19 @@ Remit.prototype.__on_result = function __on_result (message) {
     if (!callback) {
         return
     }
-    
+
     try {
         callback.callback.apply(callback.context, data)
     } catch (e) {
         delete self._results_callbacks[message.properties.correlationId]
-        
+
         if (self.on_error) {
             self.on_error(e)
         } else {
             throw e
         }
     }
-    
+
     delete self._results_callbacks[message.properties.correlationId]
 }
 
@@ -774,15 +774,15 @@ function increment_headers (headers) {
             attempts: 1
         }
     }
-    
+
     if (!headers.attempts) {
         headers.attempts = 1
-        
+
         return headers
     }
-    
+
     headers.attempts = parseInt(headers.attempts) + 1
-    
+
     return headers
 }
 
@@ -791,39 +791,26 @@ function increment_headers (headers) {
 
 
 
-function step_through_callbacks (callbacks, args, extra, done, index) {
+function step_through_callbacks(callbacks, args, extra, done) {
     args = args || {}
     extra = extra || {}
+    callbacks = (Array.isArray(callbacks)) ? callbacks : [callbacks]
 
-    if (!index) {
-        index = 0
+    let callback = callbacks.shift()
 
-        if (!Array.isArray(callbacks)) {
-            return callbacks(args, done, extra)
-        }
-
-        if (callbacks.length === 1) {
-            return callbacks[0](args, done, extra)
-        }
-
-        return callbacks[index](args, (err, args) => {
-            if (err) {
-                return done(err, args)
-            }
-
-            return step_through_callbacks(callbacks, args, extra, done, ++index)
-        }, extra)
+    if (typeof callback !== 'function') {
+        throw new Error('Callback is not a function')
     }
 
-    if (!callbacks[index]) {
-        return done(null, args)
-    }
-
-    return callbacks[index](args, (err, args) => {
+    return callback(args, (err, args) => {
         if (err) {
-            return done(err, args)
+            return done(err)
         }
 
-        return step_through_callbacks(callbacks, args, extra, done, ++index)
-    }, extra)
+        if (callbacks.length === 0) {
+            return done()
+        }
+
+        return step_through_callbacks(callbacks, args, extra, done)
+    })
 }
