@@ -339,9 +339,17 @@ Remit.prototype.__connect = function __connect (callback) {
     if (!first) {
         return
     }
+
+    let connection_options = {}
+
+    if (self._service_name) {
+        connection_options.clientProperties = {
+            connection_name: self._service_name
+        }
+    }
     
     // So let's connect!
-    amqplib.connect(self._url).then((connection) => {
+    amqplib.connect(self._url, connection_options).then((connection) => {
         // Everything's go fine, so we'll set this global
         // object to our new connection.
         self._connection = connection
