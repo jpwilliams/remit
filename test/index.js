@@ -2,10 +2,7 @@ const execSync = require('child_process').execSync;
 
 var prompt = require('prompt');
 
-var remit = require('../index.js')({
-	name: 'mocha',
-	url: process.env.REMIT_URL || 'amqp://localhost'
-})
+var Remit = require('../index')
 
 var amqp = require('amqplib')
 
@@ -32,6 +29,16 @@ Flush pertinent exchanges and queues
 */
 
 describe('Remit', function() {
+	var amqpcon
+	
+	before(function(after) {
+		amqp.connect('amqp://localhost').then((connection) => {
+			amqpcon = connection
+			
+			return after()
+		})
+	})
+	
 	// before(function(after) {
 	// 	prompt.start();
 
@@ -61,8 +68,88 @@ describe('Remit', function() {
 	// 		after()
 	// 	});
 	// })
+	
+	describe('#init', function() {
+		var option_choices = [{
+			args: true,
+			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
+		}, {
+			args: false,
+			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
+		}, {
+			args: [],
+			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
+		}, {
+			args: 0,
+			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
+		}, {
+			args: '',
+			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
+		}, {
+			args: 'test',
+			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
+		}, {
+			args: {},
+			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
+		}, {
+			args: {url: 'amqp://local'},
+			expected: {name: '', url: 'amqp://local', exchange: 'remit', lazy: false}
+		}, {
+			args: {lazy: true, exchange: 'test'},
+			expected: {name: '', url: 'amqp://localhost', exchange: 'test', lazy: true}
+		}, {
+			args: {lazy: '', url: 12345, exchange: []},
+			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
+		}]
+				
+		Array.from(option_choices).forEach(function (test) {
+			describe(`with options: ${JSON.stringify(test.args)}`, function() {
+				var remit
+				
+				beforeEach(function(done) {
+					remit = Remit(test.args)
+					
+					return done()
+				})
+				
+				it(`should have a service name of ${test.expected.name}`, function() {
+					expect(remit).to.have.property('_service_name').and.equal(test.expected.name)
+				})
+				
+				it(`should have an AMQP URL of ${test.expected.url}`, function() {
+					expect(remit).to.have.property('_url').and.equal(test.expected.url)
+				})
+				
+				it(`should have an exchange name of ${test.expected.exchange}`, function() {
+					expect(remit).to.have.property('_exchange_name').and.equal(test.expected.exchange)
+				})
+				
+				it(`should have laziness mode ${test.expected.lazy ? 'on' : 'off'}`, function() {
+					expect(remit).to.have.property('_lazy').and.equal(test.expected.lazy)
+				})
+				
+				it(`should ${test.expected.lazy ? 'not ' : ''}automatically connect`, function (done) {
+					setTimeout(function () {
+						if (test.expected.lazy) {
+							expect(remit).to.not.have.deep.property('_entities.connection')
+						} else {
+							expect(remit).to.have.deep.property('_entities.connection')
+						}
+						
+						return done()
+					}, 10)
+				})
+			})
+		})
+	})
 
 	describe('#connect', function() {
+		beforeEach(function(done) {
+			remit = Remit()
+			
+			return done()
+		})
+		
 		it('should connect to rabbitmq', function(done) {
 			remit.__assert('connection', () => {
                 done()
@@ -71,6 +158,12 @@ describe('Remit', function() {
 	})
 
 	describe('#res', function() {
+		beforeEach(function(done) {
+			remit = Remit()
+			
+			return done()
+		})
+		
 		it('should create `sum` queue', function(done) {
 			amqp.connect('amqp://localhost')
 				.then(connection => {
@@ -90,6 +183,12 @@ describe('Remit', function() {
 	})
 
 	describe('#req', function() {
+		beforeEach(function(done) {
+			remit = Remit()
+			
+			return done()
+		})
+		
 		it('should create `remit` exchange', function(done) {
 			amqp.connect('amqp://localhost')
 				.then(connection => {
