@@ -812,5 +812,5 @@ function step_through_callbacks(callbacks, args, extra, done) {
         }
 
         return step_through_callbacks(callbacks, args, extra, done)
-    })
+    }, extra)
 }
