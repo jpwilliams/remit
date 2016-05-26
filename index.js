@@ -804,11 +804,11 @@ function step_through_callbacks(callbacks, args, extra, done) {
 
     return callback(args, (err, args) => {
         if (err) {
-            return done(err)
+            return done(err, args)
         }
 
         if (callbacks.length === 0) {
-            return done()
+            return done(null, args)
         }
 
         return step_through_callbacks(callbacks, args, extra, done)
