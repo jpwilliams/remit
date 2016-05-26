@@ -112,15 +112,15 @@ describe('Remit', function() {
 					return done()
 				})
 				
-				it(`should have a service name of ${test.expected.name}`, function() {
+				it(`should have a service name of "${test.expected.name}"`, function() {
 					expect(remit).to.have.property('_service_name').and.equal(test.expected.name)
 				})
 				
-				it(`should have an AMQP URL of ${test.expected.url}`, function() {
+				it(`should have an AMQP URL of "${test.expected.url}"`, function() {
 					expect(remit).to.have.property('_url').and.equal(test.expected.url)
 				})
 				
-				it(`should have an exchange name of ${test.expected.exchange}`, function() {
+				it(`should have an exchange name of "${test.expected.exchange}"`, function() {
 					expect(remit).to.have.property('_exchange_name').and.equal(test.expected.exchange)
 				})
 				
