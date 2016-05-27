@@ -100,16 +100,35 @@ describe('Remit', function() {
 		}, {
 			args: {lazy: '', url: 12345, exchange: []},
 			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
+		}, {
+			args: {lazy: true, url: 'amqp://my.big.domain.com:4441', exchange: 'remmydanton', name: 777},
+			expected: {name: '', url: 'amqp://my.big.domain.com:4441', exchange: 'remmydanton', lazy: true}
+		}, {
+			args: {lazy: false, url: 'amqp://my.big.domain.com:4441:123', name: 'big#billservice'},
+			expected: {error: 'service name contains invalid characters', name: 'big#billservice', url: 'amqp://my.big.domain.com:4441:123', exchange: 'remit', lazy: false}
+		}, {
+			args: {lazy: false, url: 'amqp://my.big.domain.com:4441:123', name: 'my-really-long-test-service-thats-going-to-well-exceed-the-sensible-limit-even-though-all-i-wanted-to-make-was-a-simple-todo-app'},
+			expected: {error: 'service name too long', name: 'big#billservice', url: 'amqp://my.big.domain.com:4441:123', exchange: 'remit', lazy: false}
 		}]
 				
 		Array.from(option_choices).forEach(function (test) {
 			describe(`with options: ${JSON.stringify(test.args)}`, function() {
 				var remit
 				
-				beforeEach(function(done) {
-					remit = Remit(test.args)
+				if (test.expected.error) {
+					function init () {
+						remit = Remit(test.args)
+						
+						return
+					}
 					
-					return done()
+					return it(`should throw an error: ${test.expected.error}`, function () {
+						expect(init).to.throw(Error)
+					})
+				}
+				
+				it(`should create a valid Remit instance`, function () {
+					remit = Remit(test.args)
 				})
 				
 				it(`should have a service name of "${test.expected.name}"`, function() {
@@ -142,89 +161,129 @@ describe('Remit', function() {
 			})
 		})
 	})
-
-	describe('#connect', function() {
-		beforeEach(function(done) {
-			remit = Remit()
-			
-			return done()
+	
+	describe('#respond', function () {
+		var remit = Remit({
+			name: 'test-service'
 		})
 		
-		it('should connect to rabbitmq', function(done) {
-			remit.__assert('connection', () => {
-                done()
-            })
-		})
-	})
-
-	describe('#res', function() {
-		beforeEach(function(done) {
-			remit = Remit()
-			
-			return done()
+		it('should be a function', function () {
+			expect(remit.respond).to.be.a('function')
 		})
 		
-		it('should create `sum` queue', function(done) {
-			amqp.connect('amqp://localhost')
-				.then(connection => {
-					return connection.createChannel()
-						.then((channel) => {
-							remit.res('sum', function(done, nums) {
-								return done(null, nums.reduce((a, b) => a + b))
-							})
-							return channel
-						})
-						.delay(500)
-						.tap(channel => channel.checkQueue('sum'))
-						.then(() => done())
-						.ensure(() => connection.close())
-				});
-		})
-	})
-
-	describe('#req', function() {
-		beforeEach(function(done) {
-			remit = Remit()
-			
-			return done()
+		it('should have a "data" function', function () {
+			expect(remit.respond.data).to.be.a('function')
 		})
 		
-		it('should create `remit` exchange', function(done) {
-			amqp.connect('amqp://localhost')
-				.then(connection => {
-					return connection.createChannel()
-						.tap(channel => channel.checkExchange('remit'))
-						.ensure(() => connection.close())
-						.then(() => done())
-				});
+		it('should have a "res" alias', function () {
+			expect(remit.res).to.equal(remit.respond)
 		})
-
-		// it('should timeout after set period of 100ms', function(done) {
-		// 	remit.req('noexist', {}, function(err, result) {
-		// 		try {
-		// 			assert.equal(err.message, 'Timed out after no response for 100ms')
-		// 			done();
-		// 		} catch (err) {
-		// 			done(err);
-		// 		}
-		// 	}, {
-		// 		timeout: 100
-		// 	})
-		// })
-
-		it('should request `sum`', function(done) {
-			setTimeout(function() {
-				remit.req('sum', [7, 3], function(err, result) {
-					try {
-						assert.equal(result, 10)
-						done();
-					} catch (err) {
-						done(err);
-					}
+		
+		it('should have an "endpoint" alias', function () {
+			expect(remit.endpoint).to.equal(remit.respond)
+		})
+		
+		describe('init', function () {
+			it('should throw an error: endpoint event required')
+			it('should throw an error: endpoint name contains invalid characters')
+			it('should throw an error: endpoint name too long')
+			it('should create an endpoint object with no callbacks (string event)')
+			it('should create an endpoint object with no callbacks (object event)')
+			it('should create an endpoint object with one callback')
+		})
+		
+		describe('object', function () {
+			var endpoint = remit.res('object-test')
+			
+			it('should have a "data" function', function () {
+				expect(endpoint.data).to.be.a('function')
+			})
+		})
+		
+		describe('use', function () {
+			var endpoint = remit.res('use-test')
+			
+			it('should have created a `use-test` queue', function (done) {
+				amqpcon.createChannel().then((channel) => {
+					return channel	
+				}).delay(10).tap((channel) => {
+					channel.checkQueue('use-test')
+				}).then(() => {
+					done()
 				})
-			}, 200)
+			})
+			
+			it('should have 1 consumer of the `use-test` queue', function (done) {
+				amqpcon.createChannel().then((channel) => {
+					return channel
+				}).delay(10).tap((channel) => {
+					channel.checkQueue('use-test').then((queue) => {
+						if (queue.consumerCount !== 1) {
+							return done(new Error(`Consumer count was ${queue.consumerCount}`))
+						}
+						
+						return done()
+					})
+				})
+			})
+			
+			it('should run the `foo` callback')
+			it('should run `foo` then `bar` callbacks')
+			it('should no longer be consuming from the `use-test` queue')
+			it('should leave the `use-test` queue existing')
+		})
+		
+		describe('global listeners', function () {
+			it('should run `foo` global callback')
+			it('should run the `foo` global callback and the `bar` local callback')
+			it('should matter which order the callbacks are added in')
 		})
 	})
+
+	// describe('#connect', function() {
+	// 	beforeEach(function(done) {
+	// 		remit = Remit()
+			
+	// 		return done()
+	// 	})
+		
+	// 	it('should connect to rabbitmq', function(done) {
+	// 		remit.__assert('connection', () => {
+    //             done()
+    //         })
+	// 	})
+	// })
+
+	// describe('#req', function() {
+	// 	beforeEach(function(done) {
+	// 		remit = Remit()
+			
+	// 		return done()
+	// 	})
+		
+	// 	it('should create `remit` exchange', function(done) {
+	// 		amqp.connect('amqp://localhost')
+	// 			.then(connection => {
+	// 				return connection.createChannel()
+	// 					.tap(channel => channel.checkExchange('remit'))
+	// 					.ensure(() => connection.close())
+	// 					.then(() => done())
+	// 			});
+	// 	})
+
+	// 	it('should request `sum`', function(done) {
+	// 		setTimeout(function() {
+	// 			remit.req('sum', [7, 3], function(err, result) {
+	// 				try {
+	// 					assert.equal(result, 10)
+	// 					done();
+	// 				} catch (err) {
+	// 					done(err);
+	// 				}
+	// 			})
+	// 		}, 200)
+	// 	})
+	// })
 
 	// describe('#listen', function() {
 	// 	it('should create `greeting` queue', function(done) {
