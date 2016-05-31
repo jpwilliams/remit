@@ -43,7 +43,7 @@ function Remit (opts) {
     
     // States
     this._consuming_results = false
-    this._listener_count = 0
+    this._listener_counts = {}
     
     return this
 }
@@ -212,7 +212,9 @@ Remit.prototype.listen = function listen (event, callback, context, options) {
         options = {}
     }
     
-    options.queueName = `${event}:emission:${self._service_name}:${++self._listener_count}`
+    self._listener_counts[event] = self._listener_counts[event] || 0
+    
+    options.queueName = `${event}:emission:${self._service_name}:${++self._listener_counts[event]}`
     
     self.res.call(self, event, callback, context, options)
 }
