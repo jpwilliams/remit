@@ -808,7 +808,7 @@ function step_through_callbacks(callbacks, args, extra, done) {
         }
 
         if (callbacks.length === 0) {
-            return done(null, args)
+            return done(err, args)
         }
 
         return step_through_callbacks(callbacks, args, extra, done)
