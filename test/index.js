@@ -92,8 +92,8 @@ describe('Remit', function() {
 			args: {},
 			expected: {name: '', url: 'amqp://localhost', exchange: 'remit', lazy: false}
 		}, {
-			args: {url: 'amqp://local'},
-			expected: {name: '', url: 'amqp://local', exchange: 'remit', lazy: false}
+			args: {url: 'amqp://127.0.0.1'},
+			expected: {name: '', url: 'amqp://127.0.0.1', exchange: 'remit', lazy: false}
 		}, {
 			args: {lazy: true, exchange: 'test'},
 			expected: {name: '', url: 'amqp://localhost', exchange: 'test', lazy: true}
