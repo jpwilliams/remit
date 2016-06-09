@@ -3,7 +3,7 @@
 const os = require('os')
 const uuid = require('node-uuid').v4
 const trace = require('stack-trace')
-const amqplib = require('amqplib')
+const amqplib = require('amqplib/callback_api')
 
 module.exports = function (opts) {
     return new Remit(opts)
@@ -82,7 +82,11 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
             })
 
             self.__use_consume_channel(() => {
-                self._consume_channel.bindQueue(chosen_queue, self._exchange_name, event).then(() => {
+                self._consume_channel.bindQueue(chosen_queue, self._exchange_name, event, (err, ok) => {
+                    if (err) {
+                        console.error(err)
+                    }
+
                     self._consume_channel.consume(chosen_queue, (message) => {
                         if (!message.properties.timestamp) {
                             self.__consume_res(message, callbacks, context)
@@ -100,7 +104,7 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
                     }, {
                         exclusive: false
                     })
-                }).then(null, console.error)
+                })
             })
         })
     })
@@ -145,7 +149,13 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
                     }, {
                         exclusive: true,
                         noAck: true
-                    }).then(send_message).then(null, console.warn)
+                    }, (err, ok) => {
+                        if (err) {
+                            console.warn(err)
+                        } else {
+                            send_message()
+                        }
+                    })
                 })
             } else {
                 send_message()
@@ -350,7 +360,11 @@ Remit.prototype.__connect = function __connect (callback) {
     }
 
     // So let's connect!
-    amqplib.connect(self._url, connection_options).then((connection) => {
+    amqplib.connect(self._url, connection_options, (err, connection) => {
+        if (err) {
+            throw err
+        }
+
         // Everything's go fine, so we'll set this global
         // object to our new connection.
         self._connection = connection
@@ -362,7 +376,7 @@ Remit.prototype.__connect = function __connect (callback) {
             self._connection_callbacks[0]()
             self._connection_callbacks.shift()
         }
-    }).then(null, console.error)
+    })
 }
 
 
@@ -395,7 +409,7 @@ Remit.prototype.__use_consume_channel = function __use_consume_channel (callback
     }
 
     self.__connect(() => {
-        self._connection.createChannel().then((channel) => {
+        self._connection.createChannel((err, channel) => {
             channel.on('error', (err) => {
                 self._consume_channel = null
                 self.__use_consume_channel()
@@ -447,7 +461,7 @@ Remit.prototype.__use_publish_channel = function __use_publish_channel (callback
     }
 
     self.__connect(() => {
-        self._connection.createChannel().then((channel) => {
+        self._connection.createChannel((err, channel) => {
             channel.on('error', (err) => {
                 self._publish_channel = null
                 self.__use_publish_channel()
@@ -499,7 +513,7 @@ Remit.prototype.__use_work_channel = function __use_work_channel (callback) {
     }
 
     self.__connect(() => {
-        self._connection.createChannel().then((channel) => {
+        self._connection.createChannel((err, channel) => {
             channel.on('error', (err) => {
                 self._work_channel = null
                 self.__use_work_channel()
@@ -567,7 +581,11 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
     self.__use_work_channel(() => {
         self._work_channel.assertExchange(self._exchange_name, 'topic', {
             autoDelete: true
-        }).then(() => {
+        }, (err, ok) => {
+            if (err) {
+                console.error(err)
+            }
+
             // Everything went awesome so we'll let everything
             // know that the exchange is up.
             self._exchange = true
@@ -579,7 +597,7 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
                 self._exchange_callbacks[0]()
                 self._exchange_callbacks.shift()
             }
-        }).then(null, console.error)
+        })
     })
 }
 
@@ -626,23 +644,25 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
 
                 function check_and_republish() {
                     self.__use_work_channel(() => {
-                        self._work_channel.checkQueue(message.properties.replyTo).then(() => {
-                            self.__use_publish_channel(() => {
-                                self._publish_channel.publish('', message.properties.replyTo, message.content, message.properties)
-                            })
-
-                            self.__use_consume_channel(() => {
-                                self._consume_channel.ack(message)
-                            })
-                        }).then(null, (err) => {
-                            // If we got a proper queue error then the queue must
-                            // just not be around.
-                            if (err.message.substr(0, 16) === 'Operation failed') {
-                                self.__use_consume_channel(() => {
-                                    self._consume_channel.nack(message, false, false)
-                                })
+                        self._work_channel.checkQueue(message.properties.replyTo, (err, ok) => {
+                            if (err) {
+                                // If we got a proper queue error then the queue must
+                                // just not be around.
+                                if (err.message.substr(0, 16) === 'Operation failed') {
+                                    self.__use_consume_channel(() => {
+                                        self._consume_channel.nack(message, false, false)
+                                    })
+                                } else {
+                                    check_and_republish()
+                                }
                             } else {
-                                check_and_republish()
+                                self.__use_publish_channel(() => {
+                                    self._publish_channel.publish('', message.properties.replyTo, message.content, message.properties)
+                                })
+
+                                self.__use_consume_channel(() => {
+                                    self._consume_channel.ack(message)
+                                })
                             }
                         })
                     })
@@ -664,23 +684,25 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
 
             function check_and_publish () {
                 self.__use_work_channel(() => {
-                    self._work_channel.checkQueue(message.properties.replyTo).then(() => {
-                        self.__use_publish_channel(() => {
-                            self._publish_channel.publish('', message.properties.replyTo, res_data, options)
-                        })
-
-                        self.__use_consume_channel(() => {
-                            self._consume_channel.ack(message)
-                        })
-                    }).then(null, (err) => {
-                        // If we got a proper queue error then the queue must
-                        // just not be around.
-                        if (err.message.substr(0, 16) === 'Operation failed') {
-                            self.__use_consume_channel(() => {
-                                self._consume_channel.nack(message, false, false)
-                            })
+                    self._work_channel.checkQueue(message.properties.replyTo, (err, ok) => {
+                        if (err) {
+                            // If we got a proper queue error then the queue must
+                            // just not be around.
+                            if (err.message.substr(0, 16) === 'Operation failed') {
+                                self.__use_consume_channel(() => {
+                                    self._consume_channel.nack(message, false, false)
+                                })
+                            } else {
+                                check_and_publish()
+                            }
                         } else {
-                            check_and_publish()
+                            self.__use_publish_channel(() => {
+                                self._publish_channel.publish('', message.properties.replyTo, res_data, options)
+                            })
+
+                            self.__use_consume_channel(() => {
+                                self._consume_channel.ack(message)
+                            })
                         }
                     })
                 })
@@ -701,23 +723,25 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
 
                 function check_and_republish () {
                     self.__use_work_channel(() => {
-                        self._work_channel.checkQueue(message.properties.replyTo).then(() => {
-                            self.__use_publish_channel(() => {
-                                self._publish_channel.publish('', message.properties.replyTo, message.content, message.properties)
-                            })
-
-                            self.__use_consume_channel(() => {
-                                self._consume_channel.ack(message)
-                            })
-                        }).then(null, (err) => {
-                            // If we got a proper queue error then the queue must
-                            // just not be around.
-                            if (err.message.substr(0, 16) === 'Operation failed') {
-                                self.__use_consume_channel(() => {
-                                    self._consume_channel.nack(message, false, false)
-                                })
+                        self._work_channel.checkQueue(message.properties.replyTo, (err, ok) => {
+                            if (err) {
+                                // If we got a proper queue error then the queue must
+                                // just not be around.
+                                if (err.message.substr(0, 16) === 'Operation failed') {
+                                    self.__use_consume_channel(() => {
+                                        self._consume_channel.nack(message, false, false)
+                                    })
+                                } else {
+                                    check_and_republish()
+                                }
                             } else {
-                                check_and_republish()
+                                self.__use_publish_channel(() => {
+                                    self._publish_channel.publish('', message.properties.replyTo, message.content, message.properties)
+                                })
+
+                                self.__use_consume_channel(() => {
+                                    self._consume_channel.ack(message)
+                                })
                             }
                         })
                     })
