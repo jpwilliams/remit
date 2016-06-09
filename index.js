@@ -82,7 +82,7 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
             })
 
             self.__use_consume_channel(() => {
-                self._consume_channel.bindQueue(chosen_queue, self._exchange_name, event, (err, ok) => {
+                self._consume_channel.bindQueue(chosen_queue, self._exchange_name, event, {}, (err, ok) => {
                     if (err) {
                         console.error(err)
                     }
