@@ -824,26 +824,39 @@ function increment_headers (headers) {
 
 
 
-function step_through_callbacks (callbacks, args, extra, done) {
+function step_through_callbacks (callbacks, args, extra, done, index) {
     args = args !== undefined ? args : {}
     extra = extra || {}
-    callbacks = (Array.isArray(callbacks)) ? callbacks : [callbacks]
 
-    const callback = callbacks.shift()
+    if (!index) {
+        index = 0
 
-    if (typeof callback !== 'function') {
-        throw new Error('Callback is not a function')
+        if (!Array.isArray(callbacks)) {
+            return callbacks(args, done, extra)
+        }
+
+        if (callbacks.length === 1) {
+            return callbacks[index](args, done, extra)
+        }
+
+        return callbacks[index](args, (err, args) => {
+            if (err) {
+                return done(err, args)
+            }
+
+            return step_through_callbacks(callbacks, args, extra, done, ++index)
+        }, extra)
     }
 
-    return callback(args, (err, args) => {
+    if (!callbacks[index]) {
+        return done(null, args)
+    }
+
+    return callbacks[index](args, (err, args) => {
         if (err) {
             return done(err, args)
         }
 
-        if (callbacks.length === 0) {
-            return done(err, args)
-        }
-
-        return step_through_callbacks(callbacks, args, extra, done)
+        return step_through_callbacks(callbacks, args, extra, done, ++index)
     }, extra)
 }
