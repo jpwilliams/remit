@@ -54,6 +54,7 @@ function Remit (opts) {
 
 
 Remit.prototype.on_error = null
+Remit.prototype.version = require('./package.json').version
 
 
 
