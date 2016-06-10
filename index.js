@@ -826,7 +826,7 @@ function increment_headers (headers) {
 
 
 function step_through_callbacks(callbacks, args, extra, done) {
-    args = args || {}
+    args = args !== undefined ? args : {}
     extra = extra || {}
 
     callbacks = Array.isArray(callbacks) ? Array.from(callbacks) : [callbacks]
