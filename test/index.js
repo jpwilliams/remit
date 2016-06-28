@@ -1,18 +1,13 @@
-const execSync = require('child_process').execSync;
-
-var prompt = require('prompt');
-
+var execSync = require('child_process').execSync
+var prompt = require('prompt')
 var Remit = require('../index')
-
 var amqp = require('amqplib')
+var chalk = require('chalk')
+var chai = require('chai')
+var assert = chai.assert
+var expect = chai.expect
 
-var chalk = require('chalk');
-
-var chai = require('chai');
-var assert = chai.assert;
-var expect = chai.expect;
-
-chai.config.includeStack = true;
+chai.config.includeStack = true
 
 /*
 
@@ -112,7 +107,7 @@ describe('Remit', function() {
 		}]
 				
 		Array.from(option_choices).forEach(function (test) {
-			describe(`with options: ${JSON.stringify(test.args)}`, function() {
+			describe('with options: ' + JSON.stringify(test.args), function () {
 				var remit
 				
 				if (test.expected.error) {
@@ -122,32 +117,32 @@ describe('Remit', function() {
 						return
 					}
 					
-					return it(`should throw an error: ${test.expected.error}`, function () {
+					return it('should throw an error: ' + test.expected.error, function () {
 						expect(init).to.throw(Error)
 					})
 				}
 				
-				it(`should create a valid Remit instance`, function () {
+				it('should create a valid Remit instance', function () {
 					remit = Remit(test.args)
 				})
 				
-				it(`should have a service name of "${test.expected.name}"`, function() {
+				it('should have a service name of "' + test.expected.name + '"', function() {
 					expect(remit).to.have.property('_service_name').and.equal(test.expected.name)
 				})
 				
-				it(`should have an AMQP URL of "${test.expected.url}"`, function() {
+				it('should have an AMQP URL of "' + test.expected.url + '"', function() {
 					expect(remit).to.have.property('_url').and.equal(test.expected.url)
 				})
 				
-				it(`should have an exchange name of "${test.expected.exchange}"`, function() {
+				it('should have an exchange name of "' + test.expected.exchange + '"', function() {
 					expect(remit).to.have.property('_exchange_name').and.equal(test.expected.exchange)
 				})
 				
-				it(`should have laziness mode ${test.expected.lazy ? 'on' : 'off'}`, function() {
+				it('should have laziness mode ' + (test.expected.lazy ? 'on' : 'off'), function() {
 					expect(remit).to.have.property('_lazy').and.equal(test.expected.lazy)
 				})
 				
-				it(`should ${test.expected.lazy ? 'not ' : ''}automatically connect`, function (done) {
+				it('should ' + (test.expected.lazy ? 'not ' : '') + 'automatically connect', function (done) {
 					setTimeout(function () {
 						if (test.expected.lazy) {
 							expect(remit).to.not.have.deep.property('_entities.connection')
