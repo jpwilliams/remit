@@ -1,7 +1,7 @@
 'use strict'
 
 const os = require('os')
-const uuid = require('node-uuid').v4
+const uuid = require('uuid').v4
 const trace = require('stack-trace')
 const amqplib = require('amqplib/callback_api')
 
