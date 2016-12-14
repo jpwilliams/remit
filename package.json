@@ -15,7 +15,7 @@
     "debug": "^2.2.0",
     "eventemitter3": "^1.2.0",
     "lodash": "^4.12.0",
-    "node-uuid": "^1.4.7"
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
