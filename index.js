@@ -1,7 +1,7 @@
 'use strict'
 
 const os = require('os')
-const uuid = require('node-uuid').v4
+const uuid = require('uuid').v4
 const trace = require('stack-trace')
 const amqplib = require('amqplib/callback_api')
 
@@ -133,6 +133,9 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
         options.type = event
     }
 
+    options.headers = options.headers || {}
+    options.headers.uuid = uuid()
+
     self.__connect(() => {
         self.__assert_exchange(() => {
             if (!callback) {
@@ -222,7 +225,7 @@ Remit.prototype.listen = function listen (event, callback, context, options) {
     if (!options) {
         options = {}
     }
-    
+
     self._listener_counts[event] = self._listener_counts[event] || 0
     options.queueName = `${event}:emission:${self._service_name}:${++self._listener_counts[event]}`
 
