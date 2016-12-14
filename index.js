@@ -626,7 +626,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
     const extra = {
         service: message.properties.appId,
         event: message.properties.type,
-        caller: message.properties.messageId
+        caller: message.properties.messageId,
+        uuid: message.headers.uuid
     }
 
     if (!message.properties.correlationId || !message.properties.replyTo) {
