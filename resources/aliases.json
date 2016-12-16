@@ -1,0 +1,8 @@
+{
+  "request": ["req"],
+  "transientRequest": ["treq"],
+  "emit": [],
+  "delayedEmit": ["demit"],
+  "respond": ["res", "endpoint"],
+  "listen": ["on"]
+}
