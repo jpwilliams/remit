@@ -1,24 +1,24 @@
 const EventEmitter = require('eventemitter3')
 const Request = require('./lib/Request')
-const Respond = require('./lib/Respond')
+const Response = require('./lib/Response')
 const aliases = require('./resources/aliases')
 const connect = require('./lib/assertions/connection')
 
 function Remit (options) {
   options = options || {}
 
-  this._emitter = new EventEmitter(),
+  this._emitter = new EventEmitter()
 
   this._options = {
     exchange: options.exchange || 'remit'
-  },
+  }
 
   this.request = Request.apply(this, [{}])
   this.transientRequest = Request.apply(this, [{}])
   this.emit = Request.apply(this, [{}])
   this.delayedEmit = Request.apply(this, [{}])
-  this.respond = Respond.apply(this, [{}])
-  this.listen = Respond.apply(this, [{}])
+  this.respond = Response.apply(this, [{}])
+  this.listen = Response.apply(this, [{}])
 
   Object.keys(aliases).forEach((key) => {
     aliases[key].forEach((alias) => {
