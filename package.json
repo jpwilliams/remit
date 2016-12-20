@@ -12,7 +12,8 @@
   "dependencies": {
     "amqplib": "^0.5.1",
     "debug": "^2.4.4",
-    "eventemitter3": "^1.2.0"
+    "eventemitter3": "^1.2.0",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",

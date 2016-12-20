@@ -13,8 +13,8 @@ function Remit (options) {
     exchange: options.exchange || 'remit'
   }
 
-  this.request = Request.apply(this, [{}])
-  this.transientRequest = Request.apply(this, [{}])
+  this.request = Request.apply(this, [{shouldReply: true}])
+  this.transientRequest = Request.apply(this, [{shouldReply: true}])
   this.emit = Request.apply(this, [{}])
   this.delayedEmit = Request.apply(this, [{}])
   this.respond = Response.apply(this, [{}])
