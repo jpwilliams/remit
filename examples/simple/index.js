@@ -3,8 +3,8 @@ const remit = Remit()
 
 const foo = remit
   .request('my.worker.queue')
-  .data(() => {
-    foo({foo: 'bar'})
+  .data((err, result) => {
+    console.log(err, result)
   })
 
 remit
