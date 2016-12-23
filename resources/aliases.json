@@ -1,6 +1,6 @@
 {
   "request": ["req"],
-  "transientRequest": ["treq"],
+  "persistentRequest": ["preq"],
   "emit": [],
   "delayedEmit": ["demit"],
   "respond": ["res", "endpoint"],

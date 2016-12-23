@@ -13,12 +13,31 @@ function Remit (options) {
     exchange: options.exchange || 'remit'
   }
 
-  this.request = Request.apply(this, [{shouldReply: true}])
-  this.transientRequest = Request.apply(this, [{shouldReply: true}])
-  this.emit = Request.apply(this, [{}])
-  this.delayedEmit = Request.apply(this, [{}])
-  this.respond = Response.apply(this, [{}])
-  this.listen = Response.apply(this, [{}])
+  this.request = Request.apply(this, [{
+    expectReply: true
+  }])
+
+  this.persistentRequest = Request.apply(this, [{
+    expectReply: true
+  }])
+
+  this.emit = Request.apply(this, [{
+    expectReply: false
+  }])
+
+  this.delayedEmit = Request.apply(this, [{
+    expectReply: false
+  }])
+
+  this.respond = Response.apply(this, [{
+    shouldAck: true,
+    shouldReply: true
+  }])
+
+  this.listen = Response.apply(this, [{
+    shouldAck: true,
+    shouldReply: false
+  }])
 
   Object.keys(aliases).forEach((key) => {
     aliases[key].forEach((alias) => {
