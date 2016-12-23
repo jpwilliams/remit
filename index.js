@@ -45,9 +45,7 @@ function Remit (options) {
     })
   })
 
-  if (!options.lazy) {
-    connect()
-  }
+  connect(options.name || process.env.REMIT_NAME || '')
 
   return this
 }

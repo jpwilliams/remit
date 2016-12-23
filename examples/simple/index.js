@@ -1,5 +1,8 @@
 const Remit = require('../../')
-const remit = Remit()
+
+const remit = Remit({
+  name: 'my.test.worker'
+})
 
 const foo = remit
   .request('my.worker.queue')
