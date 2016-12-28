@@ -45,7 +45,10 @@ function Remit (options) {
     })
   })
 
-  connect(options.name || process.env.REMIT_NAME || '')
+  connect(
+    options.name || process.env.REMIT_NAME || '',
+    options.url || process.env.REMIT_URL || 'amqp://localhost'
+  )
 
   return this
 }
