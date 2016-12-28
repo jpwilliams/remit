@@ -1,14 +1,14 @@
 {
   "name": "remit",
   "private": true,
-  "version": "0.0.1",
-  "description": "",
+  "version": "2.0.0",
+  "description": "A small set of functionality used to create microservices that don't need to be aware of one-another's existence.",
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha --harmony-async-await --require test/bootstrap test/**/*.test.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Jack Williams <jack@wildfire.gg>",
+  "license": "MIT",
   "dependencies": {
     "amqplib": "^0.5.1",
     "debug": "^2.4.4",
@@ -20,5 +20,30 @@
     "mocha": "^3.2.0",
     "sinon": "^1.17.6",
     "sinon-chai": "^2.8.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jpwilliams/remit.git"
+  },
+  "keywords": [
+    "micro",
+    "service",
+    "microservice",
+    "microservices",
+    "amqp",
+    "rabbitmq",
+    "zeromq",
+    "rpc",
+    "request",
+    "response",
+    "emit",
+    "listen",
+    "distributed",
+    "events",
+    "messaging"
+  ],
+  "bugs": {
+    "url": "https://github.com/jpwilliams/remit/issues"
+  },
+  "homepage": "https://github.com/jpwilliams/remit#readme"
 }
