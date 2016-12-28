@@ -1,7 +1,7 @@
 const Remit = require('../../')
 
 const remit = Remit({
-  name: 'my.test.worker'
+  name: 'examples.simple'
 })
 
 const foo = remit
