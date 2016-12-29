@@ -3,8 +3,8 @@ const remit = Remit()
 
 remit
   .endpoint('my.worker.queue')
-  .data((data, callback) => {
-    data.baz = 'qux'
+  .data((event, callback) => {
+    event.data.baz = 'qux'
 
-    return callback(null, data)
+    return callback(null, event.data)
   })
