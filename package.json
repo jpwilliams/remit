@@ -5,7 +5,8 @@
   "description": "A small set of functionality used to create microservices that don't need to be aware of one-another's existence.",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha --harmony-async-await --require test/bootstrap test/**/*.test.js"
+    "test": "./node_modules/.bin/mocha --require test/bootstrap test/*.test.js test/**/*.test.js",
+    "coverage": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec --require test/bootstrap test/*.test.js test/**/*.test.js"
   },
   "author": "Jack Williams <jack@wildfire.gg>",
   "license": "MIT",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "istanbul": "^0.4.5",
     "mocha": "^3.2.0",
     "sinon": "^1.17.6",
     "sinon-chai": "^2.8.0"
