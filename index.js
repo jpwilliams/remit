@@ -10,7 +10,9 @@ function Remit (options) {
   this._emitter = new EventEmitter()
 
   this._options = {
-    exchange: options.exchange || 'remit'
+    exchange: options.exchange || 'remit',
+    name: options.name || process.env.REMIT_NAME || '',
+    url: options.url || process.env.REMIT_URL || 'amqp://localhost'
   }
 
   this.request = Request.apply(this, [{
@@ -46,8 +48,8 @@ function Remit (options) {
   })
 
   connect(
-    options.name || process.env.REMIT_NAME || '',
-    options.url || process.env.REMIT_URL || 'amqp://localhost'
+    this._options.name,
+    this._options.url
   )
 
   return this
