@@ -2,6 +2,10 @@ const remit = require('../../')({
   name: 'examples.requestPromises'
 })
 
+remit.request.data(() => {
+  console.log('Got data')
+})
+
 const myRequest = remit
   .request('my.worker.queue')
   .data((err, result) => {
@@ -10,12 +14,16 @@ const myRequest = remit
 
 remit
   .endpoint('my.worker.queue')
-  .data((data, callback) => {
-    data.baz = (data.baz || '') + 'qux'
+  .data((event, callback) => {
+    event.data.baz = (event.data.baz || '') + 'qux'
 
-    return callback(null, data)
+    return callback(null, event.data)
   })
   .ready().then(() => {
+    myRequest.data((err, result) => {
+      console.log('CALLBACK SECOND', err, result)
+    })
+
     return myRequest({foo: 'bar'})
   }).then((result) => {
     console.log('PROMISE', result)
@@ -32,5 +40,3 @@ remit
   }).catch((err) => {
     console.log('PROMISE ERR', err)
   })
-
-remit.request('my.worker.queue')
