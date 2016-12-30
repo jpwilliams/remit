@@ -1,8 +1,6 @@
-/* global describe, it, expect, sinon */
-const Remit = require('../../')
+/* global describe, it, expect, sinon, remit */
 
 describe('Holistic request/response', function () {
-  const remit = Remit()
   const callback = sinon.spy()
   const callback2 = sinon.spy()
   let endpoint

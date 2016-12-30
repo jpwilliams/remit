@@ -1,4 +1,4 @@
-/* global describe, it, expect */
+/* global describe, it, expect, remit */
 // const amqplib = require('amqplib')
 const Remit = require('../')
 
@@ -19,8 +19,6 @@ describe('Remit', function () {
     })
 
     it('should export an event emitter', function () {
-      const remit = Remit()
-
       expect(remit).to.be.an('object')
       expect(remit._emitter).to.be.an('object')
       expect(remit._emitter.on).to.be.a('function')
