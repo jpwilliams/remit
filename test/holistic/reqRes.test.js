@@ -40,7 +40,7 @@ describe('Holistic request/response', function () {
     it('should set up a request', function () {
       request = remit.request('holistic.request.response')
 
-      expect(request.send).to.be.a('function')
+      expect(request).to.be.a('function')
       expect(request.send).to.equal(request)
       expect(request.data).to.be.a('function')
       expect(request.sent).to.be.a('function')
