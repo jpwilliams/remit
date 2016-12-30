@@ -1,6 +1,6 @@
 # _Remit_
 
-[![Build Status](https://travis-ci.org/jpwilliams/remit.svg?branch=overhaul)](https://travis-ci.org/jpwilliams/remit) [![Coverage Status](https://coveralls.io/repos/github/jpwilliams/remit/badge.svg?branch=overhaul)](https://coveralls.io/github/jpwilliams/remit?branch=overhaul)
+[![Build Status](https://travis-ci.org/jpwilliams/remit.svg?branch=overhaul)](https://travis-ci.org/jpwilliams/remit) [![Coverage Status](https://coveralls.io/repos/github/jpwilliams/remit/badge.svg?branch=overhaul)](https://coveralls.io/github/jpwilliams/remit?branch=overhaul) [![npm downloads per month](https://img.shields.io/npm/dm/remit.svg)](https://www.npmjs.com/package/remit) [![npm version](https://img.shields.io/npm/v/remit.svg)](https://www.npmjs.com/package/remit)
 
 A small set of functionality used to create microservices that don't need to be aware of one-another's existence.
 
