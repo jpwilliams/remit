@@ -47,10 +47,7 @@ function Remit (options) {
     })
   })
 
-  connect(
-    this._options.name,
-    this._options.url
-  )
+  connect(this._options)
 
   return this
 }
