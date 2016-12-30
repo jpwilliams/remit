@@ -48,9 +48,56 @@ remit
 
 ## Contents
 
-* [Getting started](#getting-started)
+* [Getting started](#)
 * [Concepts](#concepts)
 * [API reference](#api-reference)
+
+## Concepts
+
+##### Basic
+
+_Remit_, primarily, makes use of four simple commands: `request`, `respond`, `emit` and `listen`.
+
+`request` requests data from an endpoint defined using `respond`.
+`emit` "emits" data to any and all "listeners" defined using `listen`.
+
+##### Example
+
+A simple example here allows us to define an endpoint that increments a counter and emits that change to the rest of the system.
+
+``` js
+// This service sets up our counter and incrementer.
+const remit = require('remit')()
+let counter = 0
+
+remit
+    .endpoint('counter.increment')
+    .data((event, callback) => {
+        remit.emit('counter.incremented').send(++counter)
+
+        return callback(null, counter)
+    })
+```
+
+``` js
+// Here we set up a listener for when the counter's been incremented
+const remit = require('remit')()
+
+remit
+    .listen('counter.incremented')
+    .data((event, callback) => {
+        console.log(`Counter is now ${event.data}`)
+
+        return callback()
+    })
+```
+
+``` js
+// And here we increment the counter!
+const remit = require('remit')()
+
+remit.request('counter.increment')()
+```
 
 ## API reference
 
@@ -101,26 +148,9 @@ Creates a new _Remit_ instance, using the given options, and connects to the mes
 
 ##### Returns [`Remit`](#remit-1)
 
-##### Examples
-
-Instantiates _Remit_ with default/environment-variable-defined options.
-
-``` js
-const remit = require('remit')()
-```
-
-Sets a name and [RabbitMQ URI](https://www.rabbitmq.com/uri-spec.html) to connect with. If the URI doesn't have a protocol specified, `'amqp://'` will be prepended for AMQP validity.
-
-``` js
-const remit = require('remit')({
-  name: 'a.micro.service',
-  url: 'amqp://rabbitmq:15555'
-})
-```
-
 ##### AMQ behaviour
 
-1. Connects to the AMQ.
+1. Connects to the AMQ
 
 ------
 
@@ -135,8 +165,8 @@ A request set up for a specific endpoint, ready to send and receive data.
 ##### Properties
 
 * `send` Synonymous with calling the `Request` object.
-* `data(callback)` Provide a callback to be run when the endpoint receives a reply from a request.
-* `sent(callback)` Provide a callback to be run when the endpoint successfully sends data to an endpoint.
+* `data(callback)` Provide a callback to be run when a reply is received from a request.
+* `sent(callback)` Provide a callback to be run when the request successfully sends data to an endpoint.
 
 ##### Returns
 
@@ -156,8 +186,12 @@ Sets up a request pointed at the specified `endpoint` with the given `options`.
 * `options` (_Optional_) An object containing a mixture of _Remit_ and AMQ options. Acceptable values are currently:
   * `something`
 
-##### Returns [`Request`](#requestdata-)
+##### Properties
 
+* `data(callback)` Provide a global callback to be run when a reply is received from _any_ request.
+* `sent(callback)` Provide a global callback to be run when _any_ request successfully sends data to an endpoint.
+
+##### Returns [`Request`](#requestdata-)
 
 ##### Templates
 
@@ -182,13 +216,26 @@ Some basic options templates are also set up as separate functions to allow for 
 }
 ```
 
-##### Examples
-
 ##### AMQ behaviour
+
+1. If a reply is sought, follow sub-steps, otherwise skip to step #2
+  1. Ensure a connection is available
+  2. Ensure the channel used for publishing is available
+  3. Start consuming from `amq.rabbitmq.reply-to`
+2. Ensure a connection is available
+3. Ensure the channel used for publishing is available
+4. Publish the message
 
 ------
 
-#### `Response([data])` [^](#api-reference)
+#### `Response` [^](#api-reference)
+
+An active endpoint set up and ready to receive data.
+
+##### Properties
+
+* `data` Provide a callback to be run when a request is received.
+* `ready` Provide a callback to be run when the endpoint becomes live and ready.
 
 ------
 
@@ -201,6 +248,11 @@ _Aliases: `res`, `endpoint`_
 * `endpoint` A string representing the name of the endpoint. This is used as a routing key (see the [RabbitMQ Topics Tutorial](https://www.rabbitmq.com/tutorials/tutorial-five-javascript.html)) so the only allowed characters are `a-zA-Z0-9_.-`.
 * `options` (_Optional_) An object containing a mixture of _Remit_ and AMQ options. Acceptable values are currently:
   * `something`
+
+##### Properties
+
+* `data` Provide a global callback to be run when _any_ request is received.
+* `ready` Provide a global callback to be run when _any_ endpoint becomes live and ready.
 
 ##### Returns [`Response`](#responsedata-)
 
@@ -216,6 +268,12 @@ Some basic options templates are also set up as separate functions to allow for 
 }
 ```
 
-##### Examples
-
 ##### AMQ behaviour
+
+1. Ensure a connection is available
+2. Ensure the channel used for miscellaneous work is available
+3. Assert the presence of the queue named after the event given
+4. Ensure the channel used for consuming is available
+5. Bind the asserted queue using a duplicate routing key
+6. Ensure the channel used for consuming is available
+7. Start consuming from the event
