@@ -5,4 +5,4 @@ node_js:
   - "node"
   - "6"
 cache: yarn
-script: "npm run coverage"
+script: "npm run travis"
