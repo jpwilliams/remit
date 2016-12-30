@@ -1,0 +1,7 @@
+language: node_js
+services: rabbitmq
+sudo: required
+node_js:
+  - "node"
+  - "6"
+script: "npm run coverage"
