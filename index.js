@@ -47,7 +47,7 @@ function Remit (options) {
     })
   })
 
-  connect(this._options)
+  connect.apply(this, [this._options])
 
   return this
 }
