@@ -15,6 +15,10 @@ function Remit (options) {
     url: options.url || process.env.REMIT_URL || 'amqp://localhost'
   }
 
+  this._internal = {
+    listenerCount: 0
+  }
+
   this.request = Request.apply(this, [{
     expectReply: true
   }])
@@ -38,7 +42,8 @@ function Remit (options) {
 
   this.listen = Response.apply(this, [{
     shouldAck: true,
-    shouldReply: false
+    shouldReply: false,
+    listener: true
   }])
 
   Object.keys(aliases).forEach((key) => {
