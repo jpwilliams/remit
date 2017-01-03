@@ -16,6 +16,8 @@
   "license": "MIT",
   "dependencies": {
     "amqplib": "^0.5.1",
+    "debug": "^2.4.1",
+    "stack-trace": "0.0.9",
     "debug": "^2.4.4",
     "eventemitter3": "^1.2.0",
     "uuid": "^3.0.1"
