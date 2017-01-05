@@ -108,10 +108,12 @@ describe('Holistic request/response', function () {
       request
         .send({foo: 'bar'})
         .then(() => {
-          expect(callback3).to.have.been.called
-          expect(callback4).to.have.been.called
+          setTimeout(() => {
+            expect(callback3).to.have.been.called
+            expect(callback4).to.have.been.called
 
-          return done()
+            return done()
+          }, 25)
         })
     })
   })
