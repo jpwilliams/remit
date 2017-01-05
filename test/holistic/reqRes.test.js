@@ -88,8 +88,8 @@ describe('Holistic request/response', function () {
     })
 
     it('should add three data callbacks', function () {
-      const handler = function (event, done) {
-        return done(null, event.data)
+      const handler = function (event, callback) {
+        return callback(null, event.data)
       }
 
       listener
