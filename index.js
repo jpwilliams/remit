@@ -23,10 +23,6 @@ function Remit (options) {
     expectReply: true
   }])
 
-  this.persistentRequest = Request.apply(this, [{
-    expectReply: true
-  }])
-
   this.emit = Request.apply(this, [{
     expectReply: false
   }])
@@ -36,6 +32,11 @@ function Remit (options) {
   }])
 
   this.respond = Response.apply(this, [{
+    shouldAck: false,
+    shouldReply: true
+  }])
+
+  this.respondQueue = Response.apply(this, [{
     shouldAck: true,
     shouldReply: true
   }])
