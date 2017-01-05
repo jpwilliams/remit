@@ -44,7 +44,12 @@ function Remit (options) {
   this.listen = Response.apply(this, [{
     shouldAck: true,
     shouldReply: false,
-    listener: true
+
+    before: (remit, options) => {
+      options.queue = options.queue || `${options.event}:l:${remit._options.name}:${++remit._internal.listenerCount}`
+
+      return options
+    }
   }])
 
   Object.keys(aliases).forEach((key) => {
