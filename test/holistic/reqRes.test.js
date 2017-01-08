@@ -105,6 +105,9 @@ describe('Holistic request/response', function () {
     })
 
     it('should be hit as a result of calling the request', function (done) {
+      this.timeout(500)
+      this.slow(400)
+
       request
         .send({foo: 'bar'})
         .then(() => {
@@ -113,7 +116,7 @@ describe('Holistic request/response', function () {
             expect(callback4).to.have.been.called
 
             return done()
-          }, 25)
+          }, 250)
         })
     })
   })
