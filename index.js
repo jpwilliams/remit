@@ -415,11 +415,13 @@ Remit.prototype.__use_consume_channel = function __use_consume_channel (callback
     self.__connect(() => {
         self._connection.createChannel((err, channel) => {
             channel.on('error', (err) => {
+                console.error(err)
                 self._consume_channel = null
                 self.__use_consume_channel()
             })
 
             channel.on('close', () => {
+                throw new Error('Consumption channel closed')
                 self._consume_channel = null
                 self.__use_consume_channel()
             })
@@ -467,11 +469,13 @@ Remit.prototype.__use_publish_channel = function __use_publish_channel (callback
     self.__connect(() => {
         self._connection.createChannel((err, channel) => {
             channel.on('error', (err) => {
+                console.error(err)
                 self._publish_channel = null
                 self.__use_publish_channel()
             })
 
             channel.on('close', () => {
+                throw new Error('Publish channel closed')
                 self._publish_channel = null
                 self.__use_publish_channel()
             })
