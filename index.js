@@ -136,6 +136,8 @@ Remit.prototype.req = function req (event, args, callback, options, caller) {
     options.headers = options.headers || {}
     options.headers.uuid = uuid()
 
+    options.timestamp = Math.ceil(+new Date() / 1000)
+
     self.__connect(() => {
         self.__assert_exchange(() => {
             if (!callback) {
