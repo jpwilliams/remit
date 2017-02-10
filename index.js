@@ -633,6 +633,7 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
         service: message.properties.appId,
         event: message.properties.type,
         caller: message.properties.messageId,
+        timestamp: message.properties.timestamp ? new Date(parseInt(message.properties.timestamp) * 1000) : new Date(),
         uuid: message.properties.headers && message.properties.headers.uuid
     }
 
