@@ -223,6 +223,7 @@ Creates a Remit object, with the specified `options` (if any), ready for use wit
 	* `name` - The name to give the current service. This is used heavily for load balancing requests, so instances of the same service (that should load balance requests between themselves) should have the same name. Is _required_ if using [`listen`](#listenevent-callback-context-options--queuename-my_queue).
 	* `url` - The URL to use to connect to the AMQ. Defaults to `amqp://localhost`.
 	* `connection` - If you already have a valid AMQ connection, you can provide and use it here. The use cases for this are slim but present.
+	* `prefetch` - The number of messages a service should hold in memory before waiting for an acknowledgement. Defaults to `128`.
 
 ## req(endpoint, data, [callback], [options = {timeout: 5000}])
 
