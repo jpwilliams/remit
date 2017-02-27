@@ -429,6 +429,8 @@ Remit.prototype.__use_consume_channel = function __use_consume_channel (callback
                 self.__use_consume_channel()
             })
 
+            channel.prefetch(self._prefetch)
+
             self._consume_channel = channel
 
             // Loop through and make everything happen!
