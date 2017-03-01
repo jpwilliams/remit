@@ -66,9 +66,7 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
     const self = this
 
     // Set up default options if we haven't been given any.
-    if (!options) {
-        options = {}
-    }
+    options = options || {}
 
     self.__connect(() => {
         self.__assert_exchange(() => {
