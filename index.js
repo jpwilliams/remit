@@ -90,6 +90,10 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
                     }
 
                     self._consume_channel.consume(chosen_queue, (message) => {
+                        if (message === null) {
+                          throw new Error('Consumer cancelled')
+                        }
+
                         if (!message.properties.timestamp) {
                             self.__consume_res(message, callbacks, context)
                         } else {
