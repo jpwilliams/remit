@@ -247,6 +247,19 @@ Remit.prototype.listen = function listen (event, callback, context, options) {
 
 
 
+Remit.prototype.ares = function ares (event, callback, context, options) {
+    const self = this
+    options = options || {}
+    options.noAck = true
+
+    self.res.call(self, event, callback, context, options)
+}
+
+
+
+
+
+
 Remit.prototype.emit = function emit (event, args, options) {
     const self = this
 
