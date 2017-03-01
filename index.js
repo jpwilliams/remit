@@ -75,15 +75,15 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
             const chosen_queue = options.queueName || event
 
             const queueOptions = {
-                durable: (options.durable !== undefined) ? options.durable : true,
-                autoDelete: (options.autoDelete !== undefined) ? options.autoDelete : false,
-                noAck: (options.noAck !== undefined) ? options.noAck : false,
-                exclusive: (options.exclusive !== undefined) ? options.exclusive : false
+                durable: (options.hasOwnProperty('durable')) ? !!options.durable : true,
+                autoDelete: (options.hasOwnProperty('autoDelete')) ? !!options.autoDelete : false,
+                noAck: (options.hasOwnProperty('noAck')) ? !!options.noAck : false,
+                exclusive: (options.hasOwnProperty('exclusive')) ? !!options.exclusive : false
             }
 
             const consumerOptions = {
-                noAck: (options.noAck !== undefined) ? options.noAck : false,
-                exclusive: (options.exclusive !== undefined) ? options.exclusive : false
+                noAck: (options.hasOwnProperty('noAck')) ? !!options.noAck : false,
+                exclusive: (options.hasOwnProperty('exclusive')) ? !!options.exclusive : false
             }
 
             console.log('consumerOptions', consumerOptions)
