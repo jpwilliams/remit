@@ -74,13 +74,24 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
         self.__assert_exchange(() => {
             const chosen_queue = options.queueName || event
 
+            const queueOptions = {
+                durable: (options.durable !== undefined) ? options.durable : true,
+                autoDelete: (options.autoDelete !== undefined) ? options.autoDelete : false,
+                noAck: (options.noAck !== undefined) ? options.noAck : false,
+                exclusive: (options.exclusive !== undefined) ? options.exclusive : false
+            }
+
+            const consumerOptions = {
+                noAck: (options.noAck !== undefined) ? options.noAck : false,
+                exclusive: (options.exclusive !== undefined) ? options.exclusive : false
+            }
+
+            console.log('consumerOptions', consumerOptions)
+            console.log('queueOptions', queueOptions)
+
             self.__use_consume_channel(() => {
                 // TODO Check this for a valid response
-                self._consume_channel.assertQueue(chosen_queue, {
-                    exclusive: false,
-                    durable: true,
-                    autoDelete: false
-                })
+                self._consume_channel.assertQueue(chosen_queue, queueOptions)
             })
 
             self.__use_consume_channel(() => {
@@ -103,9 +114,7 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
                                 }, time_to_wait)
                             }
                         }
-                    }, {
-                        exclusive: false
-                    })
+                    }, consumerOptions)
                 })
             })
         })
