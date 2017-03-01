@@ -75,7 +75,6 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
             const queueOptions = {
                 durable: (options.hasOwnProperty('durable')) ? !!options.durable : true,
                 autoDelete: (options.hasOwnProperty('autoDelete')) ? !!options.autoDelete : false,
-                noAck: (options.hasOwnProperty('noAck')) ? !!options.noAck : false,
                 exclusive: (options.hasOwnProperty('exclusive')) ? !!options.exclusive : false
             }
 
