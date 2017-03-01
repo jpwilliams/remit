@@ -84,9 +84,6 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
                 exclusive: (options.hasOwnProperty('exclusive')) ? !!options.exclusive : false
             }
 
-            console.log('consumerOptions', consumerOptions)
-            console.log('queueOptions', queueOptions)
-
             self.__use_consume_channel(() => {
                 // TODO Check this for a valid response
                 self._consume_channel.assertQueue(chosen_queue, queueOptions)
@@ -663,7 +660,6 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
     if (!message.properties.correlationId || !message.properties.replyTo) {
         function done (err, data) {
             self.__use_consume_channel(() => {
-                console.log('consumerOptions', consumerOptions)
                 if (!consumerOptions.noAck) self._consume_channel.ack(message)
             })
         }
@@ -673,7 +669,6 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
         } catch (e) {
             if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                 self.__use_consume_channel(() => {
-                    console.log('consumerOptions', consumerOptions)
                     if (!consumerOptions.noAck) self._consume_channel.nack(message, false, false)
                 })
             } else {
@@ -698,7 +693,6 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                                 })
 
                                 self.__use_consume_channel(() => {
-                                    console.log('consumerOptions', consumerOptions)
                                     if (!consumerOptions.noAck) self._consume_channel.ack(message)
                                 })
                             }
@@ -728,7 +722,6 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                             // just not be around.
                             if (err.message.substr(0, 16) === 'Operation failed') {
                                 self.__use_consume_channel(() => {
-                                    console.log('consumerOptions', consumerOptions)
                                     if (!consumerOptions.noAck) self._consume_channel.nack(message, false, false)
                                 })
                             } else {
@@ -740,7 +733,6 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                             })
 
                             self.__use_consume_channel(() => {
-                                console.log('consumerOptions', consumerOptions)
                                 if (!consumerOptions.noAck) self._consume_channel.ack(message)
                             })
                         }
