@@ -102,15 +102,15 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
 
                     self._consume_channel.consume(chosen_queue, (message) => {
                         if (!message.properties.timestamp) {
-                            self.__consume_res(message, callbacks, context)
+                            self.__consume_res(message, callbacks, context, consumerOptions)
                         } else {
                             const time_to_wait = parseInt(message.properties.timestamp - new Date().getTime())
 
                             if (time_to_wait <= 0) {
-                                self.__consume_res(message, callbacks, context)
+                                self.__consume_res(message, callbacks, context, consumerOptions)
                             } else {
                                 setTimeout(() => {
-                                    self.__consume_res(message, callbacks, context)
+                                    self.__consume_res(message, callbacks, context, consumerOptions)
                                 }, time_to_wait)
                             }
                         }
@@ -628,7 +628,7 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
 
 
 
-Remit.prototype.__consume_res = function __consume_res (message, callbacks, context) {
+Remit.prototype.__consume_res = function __consume_res (message, callbacks, context, consumerOptions) {
     const self = this
 
     let data
@@ -652,7 +652,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
     if (!message.properties.correlationId || !message.properties.replyTo) {
         function done (err, data) {
             self.__use_consume_channel(() => {
-                self._consume_channel.ack(message)
+                console.log('consumerOptions', consumerOptions)
+                if (!consumerOptions.noAck) self._consume_channel.ack(message)
             })
         }
 
@@ -661,7 +662,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
         } catch (e) {
             if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                 self.__use_consume_channel(() => {
-                    self._consume_channel.nack(message, false, false)
+                    console.log('consumerOptions', consumerOptions)
+                    if (!consumerOptions.noAck) self._consume_channel.nack(message, false, false)
                 })
             } else {
                 message.properties.headers = increment_headers(message.properties.headers)
@@ -685,7 +687,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                                 })
 
                                 self.__use_consume_channel(() => {
-                                    self._consume_channel.ack(message)
+                                    console.log('consumerOptions', consumerOptions)
+                                    if (!consumerOptions.noAck) self._consume_channel.ack(message)
                                 })
                             }
                         })
@@ -714,7 +717,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                             // just not be around.
                             if (err.message.substr(0, 16) === 'Operation failed') {
                                 self.__use_consume_channel(() => {
-                                    self._consume_channel.nack(message, false, false)
+                                    console.log('consumerOptions', consumerOptions)
+                                    if (!consumerOptions.noAck) self._consume_channel.nack(message, false, false)
                                 })
                             } else {
                                 check_and_publish()
@@ -725,7 +729,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                             })
 
                             self.__use_consume_channel(() => {
-                                self._consume_channel.ack(message)
+                                console.log('consumerOptions', consumerOptions)
+                                if (!consumerOptions.noAck) self._consume_channel.ack(message)
                             })
                         }
                     })
