@@ -66,21 +66,26 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
     const self = this
 
     // Set up default options if we haven't been given any.
-    if (!options) {
-        options = {}
-    }
+    options = options || {}
 
     self.__connect(() => {
         self.__assert_exchange(() => {
             const chosen_queue = options.queueName || event
 
+            const queueOptions = {
+                durable: (options.hasOwnProperty('durable')) ? !!options.durable : true,
+                autoDelete: (options.hasOwnProperty('autoDelete')) ? !!options.autoDelete : false,
+                exclusive: (options.hasOwnProperty('exclusive')) ? !!options.exclusive : false
+            }
+
+            const consumerOptions = {
+                noAck: (options.hasOwnProperty('noAck')) ? !!options.noAck : false,
+                exclusive: (options.hasOwnProperty('exclusive')) ? !!options.exclusive : false
+            }
+
             self.__use_consume_channel(() => {
                 // TODO Check this for a valid response
-                self._consume_channel.assertQueue(chosen_queue, {
-                    exclusive: false,
-                    durable: true,
-                    autoDelete: false
-                })
+                self._consume_channel.assertQueue(chosen_queue, queueOptions)
             })
 
             self.__use_consume_channel(() => {
@@ -95,21 +100,19 @@ Remit.prototype.res = function res (event, callbacks, context, options) {
                         }
 
                         if (!message.properties.timestamp) {
-                            self.__consume_res(message, callbacks, context)
+                            self.__consume_res(message, callbacks, context, consumerOptions)
                         } else {
                             const time_to_wait = parseInt(message.properties.timestamp - new Date().getTime())
 
                             if (time_to_wait <= 0) {
-                                self.__consume_res(message, callbacks, context)
+                                self.__consume_res(message, callbacks, context, consumerOptions)
                             } else {
                                 setTimeout(() => {
-                                    self.__consume_res(message, callbacks, context)
+                                    self.__consume_res(message, callbacks, context, consumerOptions)
                                 }, time_to_wait)
                             }
                         }
-                    }, {
-                        exclusive: false
-                    })
+                    }, consumerOptions)
                 })
             })
         })
@@ -235,6 +238,32 @@ Remit.prototype.listen = function listen (event, callback, context, options) {
     options.queueName = `${event}:emission:${self._service_name}:${++self._listener_counts[event]}`
 
     self.res.call(self, event, callback, context, options)
+}
+
+
+
+
+
+
+Remit.prototype.ares = function ares (event, callback, context, options) {
+    const self = this
+    options = options || {}
+    options.noAck = true
+
+    self.res.call(self, event, callback, context, options)
+}
+
+
+
+
+
+
+Remit.prototype.alisten = function ares (event, callback, context, options) {
+    const self = this
+    options = options || {}
+    options.noAck = true
+
+    self.listen.call(self, event, callback, context, options)
 }
 
 
@@ -621,7 +650,7 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
 
 
 
-Remit.prototype.__consume_res = function __consume_res (message, callbacks, context) {
+Remit.prototype.__consume_res = function __consume_res (message, callbacks, context, consumerOptions) {
     const self = this
 
     let data
@@ -645,7 +674,7 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
     if (!message.properties.correlationId || !message.properties.replyTo) {
         function done (err, data) {
             self.__use_consume_channel(() => {
-                self._consume_channel.ack(message)
+                if (!consumerOptions.noAck) self._consume_channel.ack(message)
             })
         }
 
@@ -654,7 +683,7 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
         } catch (e) {
             if (message.properties.headers && message.properties.headers.attempts && message.properties.headers.attempts > 4) {
                 self.__use_consume_channel(() => {
-                    self._consume_channel.nack(message, false, false)
+                    if (!consumerOptions.noAck) self._consume_channel.nack(message, false, false)
                 })
             } else {
                 message.properties.headers = increment_headers(message.properties.headers)
@@ -678,7 +707,7 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                                 })
 
                                 self.__use_consume_channel(() => {
-                                    self._consume_channel.ack(message)
+                                    if (!consumerOptions.noAck) self._consume_channel.ack(message)
                                 })
                             }
                         })
@@ -707,7 +736,7 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                             // just not be around.
                             if (err.message.substr(0, 16) === 'Operation failed') {
                                 self.__use_consume_channel(() => {
-                                    self._consume_channel.nack(message, false, false)
+                                    if (!consumerOptions.noAck) self._consume_channel.nack(message, false, false)
                                 })
                             } else {
                                 check_and_publish()
@@ -718,7 +747,7 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                             })
 
                             self.__use_consume_channel(() => {
-                                self._consume_channel.ack(message)
+                                if (!consumerOptions.noAck) self._consume_channel.ack(message)
                             })
                         }
                     })
