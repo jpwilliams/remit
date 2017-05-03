@@ -25,7 +25,8 @@ TO-DO: Once remit supports promises (or event emitters) refactor to avoid using 
 Before hook will:
 Create endpoints:
 	@noop - will exist but not do much.
-	@sum  - will exist and return a sum.
+	@sum  - will exist and return the sum.
+	@sum_then_double  - will exist and return the dobuled sum.
 	@noexist  - will not exist.
 
 Flush pertinent exchanges and queues
@@ -85,6 +86,28 @@ describe('Remit', function() {
 						.ensure(() => connection.close())
 				});
 		})
+
+		it('should create `sum_then_double` queue', function(done) {
+			amqp.connect('amqp://localhost')
+				.then(connection => {
+					return connection.createChannel()
+						.then((channel) => {
+							remit.res('sum_then_double', [
+								function(nums, done) {
+									return done(null, nums.reduce((a, b) => a + b))
+								},
+								function(sum, done) {
+									return done(null, sum*2)
+								}
+							])
+							return channel
+						})
+						.delay(500)
+						.tap(channel => channel.checkQueue('sum_then_double'))
+						.then(() => done())
+						.ensure(() => connection.close())
+				});
+		})
 	})
 
 	describe('#req', function() {
@@ -123,6 +146,45 @@ describe('Remit', function() {
 				})
 			}, 200)
 		})
+
+		it('should request `sum` again', function(done) {
+			setTimeout(function() {
+				remit.req('sum', [7, 3], function(err, result) {
+					try {
+						assert.equal(result, 10)
+						done();
+					} catch (err) {
+						done(err);
+					}
+				})
+			}, 200)
+		})
+
+		it('should request `sum_then_double`', function(done) {
+			setTimeout(function() {
+				remit.req('sum_then_double', [7, 3], function(err, result) {
+					try {
+						assert.equal(result, 20)
+						done();
+					} catch (err) {
+						done(err);
+					}
+				})
+			}, 200)
+		})
+
+		it('should request `sum_then_double` again', function(done) {
+			setTimeout(function() {
+				remit.req('sum_then_double', [7, 3], function(err, result) {
+					try {
+						assert.equal(result, 20)
+						done();
+					} catch (err) {
+						done(err);
+					}
+				})
+			}, 200)
+		})
 	})
 
 	describe('#listen', function() {
@@ -137,7 +199,7 @@ describe('Remit', function() {
 							return channel
 						})
 						.delay(200)
-						.tap(channel => channel.checkQueue(`greeting:emission:${remit._service_name}:${remit._listener_count}`))
+						.tap(channel => channel.checkQueue(`greeting:emission:${remit._service_name}:${remit._listener_counts.greeting}`))
 						.then(() => done())
 						.ensure(() => connection.close())
 				});
@@ -153,7 +215,7 @@ describe('Remit', function() {
 
 					return connection.createChannel()
 						.delay(200)
-						.tap(channel => channel.get(`greeting:emission:${remit._service_name}:${remit._listener_count}`))
+						.tap(channel => channel.get(`greeting:emission:${remit._service_name}:${remit._listener_counts.greeting}`))
 						.ensure(() => connection.close())
 						.then(() => done())
 				})
