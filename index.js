@@ -22,7 +22,8 @@ function Remit (opts) {
     this._url = opts.url || 'amqp://localhost'
     this._trace = opts.trace === false ? false : true
     this._exchange_name = opts.exchange || 'remit'
-    this._prefetch = opts.prefetch || 128
+    this._prefetch = parseInt(opts.prefetch)
+    if (isNaN(this._prefetch)) this._prefetch = 128
 
     // Global items
     this._connection = opts.connection || null
