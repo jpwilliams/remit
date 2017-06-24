@@ -595,13 +595,16 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
     }
 
     // Let's try making this exchange!
-    self.__use_work_channel(() => {
-        self._work_channel.assertExchange(self._exchange_name, 'topic', {
+    self._worker_pool.acquire((err, channel) => {
+        channel.assertExchange(self._exchange_name, 'topic', {
             autoDelete: true
         }, (err, ok) => {
             if (err) {
                 console.error(err)
+                self._worker_pool.remove(channel)
             }
+
+            self._worker_pool.release(channel)
 
             // Everything went awesome so we'll let everything
             // know that the exchange is up.
@@ -662,9 +665,11 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                 message.properties.headers = increment_headers(message.properties.headers)
 
                 function check_and_republish() {
-                    self.__use_work_channel(() => {
-                        self._work_channel.checkQueue(message.properties.replyTo, (err, ok) => {
+                    self._worker_pool.acquire((err, channel) => {
+                        channel.checkQueue(message.properties.replyTo, (err, ok) => {
                             if (err) {
+                                self._worker_pool.remove(channel)
+
                                 // If we got a proper queue error then the queue must
                                 // just not be around.
                                 if (err.message.substr(0, 16) === 'Operation failed') {
@@ -675,6 +680,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                                     check_and_republish()
                                 }
                             } else {
+                                self._worker_pool.release(channel)
+
                                 self.__use_publish_channel(() => {
                                     self._publish_channel.publish('', message.properties.replyTo, message.content, message.properties)
                                 })
@@ -702,9 +709,11 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
             const res_data = new Buffer(JSON.stringify(Array.prototype.slice.call(arguments)))
 
             function check_and_publish () {
-                self.__use_work_channel(() => {
-                    self._work_channel.checkQueue(message.properties.replyTo, (err, ok) => {
+                self._worker_pool.acquire((err, channel) => {
+                    channel.checkQueue(message.properties.replyTo, (err, ok) => {
                         if (err) {
+                            self._worker_pool.remove(channel)
+
                             // If we got a proper queue error then the queue must
                             // just not be around.
                             if (err.message.substr(0, 16) === 'Operation failed') {
@@ -715,6 +724,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                                 check_and_publish()
                             }
                         } else {
+                            self._worker_pool.release(channel)
+
                             self.__use_publish_channel(() => {
                                 self._publish_channel.publish('', message.properties.replyTo, res_data, options)
                             })
@@ -741,9 +752,11 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                 message.properties.headers = increment_headers(message.properties.headers)
 
                 function check_and_republish () {
-                    self.__use_work_channel(() => {
-                        self._work_channel.checkQueue(message.properties.replyTo, (err, ok) => {
+                    self._worker_pool.acquire((err, channel) => {
+                        channel.checkQueue(message.properties.replyTo, (err, ok) => {
                             if (err) {
+                                self._worker_pool.remove(channel)
+
                                 // If we got a proper queue error then the queue must
                                 // just not be around.
                                 if (err.message.substr(0, 16) === 'Operation failed') {
@@ -754,6 +767,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                                     check_and_republish()
                                 }
                             } else {
+                                self._worker_pool.release(channel)
+
                                 self.__use_publish_channel(() => {
                                     self._publish_channel.publish('', message.properties.replyTo, message.content, message.properties)
                                 })
