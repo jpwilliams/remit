@@ -17,6 +17,7 @@ module.exports = function (opts) {
 
 function Remit (opts) {
     if (!opts) opts = {}
+    const self = this
 
     // Exposed items
     this._service_name = opts.name || ''
@@ -30,7 +31,6 @@ function Remit (opts) {
     this._connection = opts.connection || null
     this._consume_channel = null
     this._publish_channel = null
-    this._work_channel = null
     this._exchange = null
 
     // Callback queues
@@ -47,6 +47,29 @@ function Remit (opts) {
     // States
     this._consuming_results = false
     this._listener_counts = {}
+
+    // Temp channels
+    this._worker_pool = new Pool({
+        acquire: (callback) => {
+            self.__connect(() => {
+                self._connection.createChannel((err, channel) => {
+                    if (err) return callback(err)
+
+                    channel.on('error', () => {})
+                    channel.on('close', () => {})
+
+                    return callback(null, channel)
+                })
+            })
+        },
+
+        dispose: (channel, callback) => {
+            callback()
+        },
+
+        min: 5,
+        max: 10
+    })
 
     return this
 }
@@ -524,58 +547,6 @@ Remit.prototype.__use_publish_channel = function __use_publish_channel (callback
             while (self._publish_channel_callbacks.length > 0) {
                 self._publish_channel_callbacks[0]()
                 self._publish_channel_callbacks.shift()
-            }
-        })
-    })
-}
-
-
-
-
-
-
-Remit.prototype.__use_work_channel = function __use_work_channel (callback) {
-    const self = this
-
-    if (!callback) {
-        callback = function () {}
-    }
-
-    if (self._work_channel) {
-        if (self._work_channel_callbacks.length) {
-            self._work_channel_callbacks.push(callback)
-
-            return
-        }
-
-        return callback()
-    }
-
-    const first = !self._work_channel_callbacks.length
-    self._work_channel_callbacks.push(callback)
-
-    if (!first) {
-        return
-    }
-
-    self.__connect(() => {
-        self._connection.createChannel((err, channel) => {
-            channel.on('error', (err) => {
-                self._work_channel = null
-                self.__use_work_channel()
-            })
-
-            channel.on('close', () => {
-                self._work_channel = null
-                self.__use_work_channel()
-            })
-
-            self._work_channel = channel
-
-            // Loop through and make everything happen!
-            while (self._work_channel_callbacks.length > 0) {
-                self._work_channel_callbacks[0]()
-                self._work_channel_callbacks.shift()
             }
         })
     })
