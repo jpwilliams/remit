@@ -4,6 +4,7 @@ const os = require('os')
 const uuid = require('uuid').v4
 const trace = require('stack-trace')
 const amqplib = require('amqplib/callback_api')
+const Pool = require('pool2')
 
 module.exports = function (opts) {
     return new Remit(opts)
