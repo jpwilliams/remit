@@ -3,6 +3,7 @@ const Request = require('./lib/Request')
 const Response = require('./lib/Response')
 const aliases = require('./resources/aliases')
 const connect = require('./lib/assertions/connection')
+const bootWorkChannelPool = require('./lib/assertions/bootWorkChannelPool')
 
 function Remit (options) {
   options = options || {}
@@ -65,6 +66,7 @@ function Remit (options) {
   })
 
   connect.apply(this, [this._options])
+  this._workChannelPool = bootWorkChannelPool.apply(this)
 
   return this
 }
