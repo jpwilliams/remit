@@ -18,7 +18,9 @@ describe('Cases#multiple', function () {
       .data((event, callback) => {
         return callback('errrrr')
       })
-      .ready(done)
+      .ready((options) => {
+        return done()
+      })
   })
 
   it('should get a reply', function (done) {

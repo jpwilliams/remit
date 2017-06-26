@@ -13,7 +13,9 @@ describe('Holistic request/response', function () {
     it('should set up an endpoint', function (done) {
       endpoint = remit
         .endpoint('holistic.request.response')
-        .ready(done)
+        .ready((options) => {
+          return done()
+        })
 
       expect(endpoint).to.be.an('object')
       expect(endpoint.ready).to.be.a('function')
