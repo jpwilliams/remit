@@ -4,6 +4,7 @@ const os = require('os')
 const uuid = require('uuid').v4
 const trace = require('stack-trace')
 const amqplib = require('amqplib/callback_api')
+const Pool = require('pool2')
 
 module.exports = function (opts) {
     return new Remit(opts)
@@ -16,6 +17,7 @@ module.exports = function (opts) {
 
 function Remit (opts) {
     if (!opts) opts = {}
+    const self = this
 
     // Exposed items
     this._service_name = opts.name || ''
@@ -29,7 +31,6 @@ function Remit (opts) {
     this._connection = opts.connection || null
     this._consume_channel = null
     this._publish_channel = null
-    this._work_channel = null
     this._exchange = null
 
     // Callback queues
@@ -46,6 +47,29 @@ function Remit (opts) {
     // States
     this._consuming_results = false
     this._listener_counts = {}
+
+    // Temp channels
+    this._worker_pool = new Pool({
+        acquire: (callback) => {
+            self.__connect(() => {
+                self._connection.createChannel((err, channel) => {
+                    if (err) return callback(err)
+
+                    channel.on('error', () => {})
+                    channel.on('close', () => {})
+
+                    return callback(null, channel)
+                })
+            })
+        },
+
+        dispose: (channel, callback) => {
+            callback()
+        },
+
+        min: 5,
+        max: 10
+    })
 
     return this
 }
@@ -533,58 +557,6 @@ Remit.prototype.__use_publish_channel = function __use_publish_channel (callback
 
 
 
-Remit.prototype.__use_work_channel = function __use_work_channel (callback) {
-    const self = this
-
-    if (!callback) {
-        callback = function () {}
-    }
-
-    if (self._work_channel) {
-        if (self._work_channel_callbacks.length) {
-            self._work_channel_callbacks.push(callback)
-
-            return
-        }
-
-        return callback()
-    }
-
-    const first = !self._work_channel_callbacks.length
-    self._work_channel_callbacks.push(callback)
-
-    if (!first) {
-        return
-    }
-
-    self.__connect(() => {
-        self._connection.createChannel((err, channel) => {
-            channel.on('error', (err) => {
-                self._work_channel = null
-                self.__use_work_channel()
-            })
-
-            channel.on('close', () => {
-                self._work_channel = null
-                self.__use_work_channel()
-            })
-
-            self._work_channel = channel
-
-            // Loop through and make everything happen!
-            while (self._work_channel_callbacks.length > 0) {
-                self._work_channel_callbacks[0]()
-                self._work_channel_callbacks.shift()
-            }
-        })
-    })
-}
-
-
-
-
-
-
 Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
     const self = this
 
@@ -623,13 +595,16 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
     }
 
     // Let's try making this exchange!
-    self.__use_work_channel(() => {
-        self._work_channel.assertExchange(self._exchange_name, 'topic', {
+    self._worker_pool.acquire((err, channel) => {
+        channel.assertExchange(self._exchange_name, 'topic', {
             autoDelete: true
         }, (err, ok) => {
             if (err) {
                 console.error(err)
+                self._worker_pool.remove(channel)
             }
+
+            self._worker_pool.release(channel)
 
             // Everything went awesome so we'll let everything
             // know that the exchange is up.
@@ -690,9 +665,11 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                 message.properties.headers = increment_headers(message.properties.headers)
 
                 function check_and_republish() {
-                    self.__use_work_channel(() => {
-                        self._work_channel.checkQueue(message.properties.replyTo, (err, ok) => {
+                    self._worker_pool.acquire((err, channel) => {
+                        channel.checkQueue(message.properties.replyTo, (err, ok) => {
                             if (err) {
+                                self._worker_pool.remove(channel)
+
                                 // If we got a proper queue error then the queue must
                                 // just not be around.
                                 if (err.message.substr(0, 16) === 'Operation failed') {
@@ -703,6 +680,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                                     check_and_republish()
                                 }
                             } else {
+                                self._worker_pool.release(channel)
+
                                 self.__use_publish_channel(() => {
                                     self._publish_channel.publish('', message.properties.replyTo, message.content, message.properties)
                                 })
@@ -730,9 +709,11 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
             const res_data = new Buffer(JSON.stringify(Array.prototype.slice.call(arguments)))
 
             function check_and_publish () {
-                self.__use_work_channel(() => {
-                    self._work_channel.checkQueue(message.properties.replyTo, (err, ok) => {
+                self._worker_pool.acquire((err, channel) => {
+                    channel.checkQueue(message.properties.replyTo, (err, ok) => {
                         if (err) {
+                            self._worker_pool.remove(channel)
+
                             // If we got a proper queue error then the queue must
                             // just not be around.
                             if (err.message.substr(0, 16) === 'Operation failed') {
@@ -743,6 +724,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                                 check_and_publish()
                             }
                         } else {
+                            self._worker_pool.release(channel)
+
                             self.__use_publish_channel(() => {
                                 self._publish_channel.publish('', message.properties.replyTo, res_data, options)
                             })
@@ -769,9 +752,11 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                 message.properties.headers = increment_headers(message.properties.headers)
 
                 function check_and_republish () {
-                    self.__use_work_channel(() => {
-                        self._work_channel.checkQueue(message.properties.replyTo, (err, ok) => {
+                    self._worker_pool.acquire((err, channel) => {
+                        channel.checkQueue(message.properties.replyTo, (err, ok) => {
                             if (err) {
+                                self._worker_pool.remove(channel)
+
                                 // If we got a proper queue error then the queue must
                                 // just not be around.
                                 if (err.message.substr(0, 16) === 'Operation failed') {
@@ -782,6 +767,8 @@ Remit.prototype.__consume_res = function __consume_res (message, callbacks, cont
                                     check_and_republish()
                                 }
                             } else {
+                                self._worker_pool.release(channel)
+
                                 self.__use_publish_channel(() => {
                                     self._publish_channel.publish('', message.properties.replyTo, message.content, message.properties)
                                 })

@@ -12,6 +12,7 @@
   "dependencies": {
     "amqplib": "^0.4.2",
     "debug": "^2.6.0",
+    "pool2": "^1.4.1",
     "stack-trace": "0.0.9",
     "uuid": "^3.0.1"
   },
