@@ -1,3 +1,4 @@
+const packageJson = require('./package.json')
 const EventEmitter = require('eventemitter3')
 const Request = require('./lib/Request')
 const Response = require('./lib/Response')
@@ -8,6 +9,7 @@ const bootWorkChannelPool = require('./lib/assertions/bootWorkChannelPool')
 function Remit (options) {
   options = options || {}
 
+  this.version = packageJson.version
   this._emitter = new EventEmitter()
 
   this._options = {
