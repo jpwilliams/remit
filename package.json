@@ -1,6 +1,6 @@
 {
   "name": "remit",
-  "version": "2.0.0-beta.2",
+  "version": "2.0.0-beta.3",
   "description": "A small set of functionality used to create microservices that don't need to be aware of one-another's existence.",
   "main": "index.js",
   "engines": {
