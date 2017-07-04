@@ -3,6 +3,5 @@
   "emit": [],
   "delayedEmit": ["demit"],
   "respond": ["res", "endpoint"],
-  "respondQueue": ["resq", "queue"],
   "listen": ["on"]
 }

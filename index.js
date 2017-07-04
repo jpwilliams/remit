@@ -45,11 +45,6 @@ function Remit (options) {
     shouldReply: true
   }])
 
-  this.respondQueue = Response.apply(this, [{
-    shouldAck: true,
-    shouldReply: true
-  }])
-
   this.listen = Response.apply(this, [{
     shouldAck: true,
     shouldReply: false,
