@@ -54,5 +54,10 @@
   "bugs": {
     "url": "https://github.com/jpwilliams/remit/issues"
   },
-  "homepage": "https://github.com/jpwilliams/remit#readme"
+  "homepage": "https://github.com/jpwilliams/remit#readme",
+  "files": [
+    "test",
+    "resources",
+    "lib"
+  ]
 }
