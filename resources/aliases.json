@@ -1,7 +1,6 @@
 {
   "request": ["req"],
   "emit": [],
-  "delayedEmit": ["demit"],
   "respond": ["res", "endpoint"],
   "listen": ["on"]
 }

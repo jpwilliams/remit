@@ -30,16 +30,6 @@ function Remit (options) {
     expectReply: false
   }])
 
-  this.delayedEmit = Request.apply(this, [{
-    expectReply: false,
-
-    before: (remit, options) => {
-      options.demission = true
-
-      return options
-    }
-  }])
-
   this.respond = Response.apply(this, [{
     shouldAck: false,
     shouldReply: true
