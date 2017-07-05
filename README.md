@@ -9,41 +9,31 @@ npm install remit
 ```
 
 ``` js
-// Create our Remit connection
-const remit = require('remit')({
-  url: 'localhost',
-  name: 'a.micro.service'
-})
+const remit = require('remit')()
 
-// Set up an endpoint with the name 'micro.service.info'
-remit
-  .endpoint('micro.service.info')
+;(async function () {
+  const endpoint = remit
+    .endpoint('user.profile')
+    .data((event, callback) => {
+      const user = getUser({ id: event.data.id })
 
-  // When the endpoint is hit, run this function
-  .data((data, callback) => {
-    console.log('Endpoint was hit!')
+      callback(null, user)
+    })
 
-    data.foo = 'bar'
+  await endpoint.ready()
 
-    // Reply with the mutated data
-    return callback(null, data)
+  try {
+    var user = await remit
+      .request('user.profile')
+      .send({ id: 123 })
+  } catch (e) {
+    console.error('Error getting user', e)
+  }
 
-  // Once the endpoint is ready...
-  }).ready().then(() => {
-    // Make a request to the 'micro.service.save' endpoint
-    // with the data {name: 'a.micro.service'}
-    return remit
-      .request('micro.service.save')
-      .send({name: 'a.micro.service'})
-  }).then((result) => {
-    // When the reply comes back, log the response.
-    console.log('Saved microservice info', result)
-  }).catch((err) => {
-    // If the request failed (the replying microservice returned
-    // an error, the request timed out or couldn't be routed),
-    // log the error.
-    console.error('Couldn\'t seem to save microservice info', err)
-  })
+  if (user) {
+    console.log('Got user', user)
+  }
+})()
 ```
 
 ## Contents
@@ -105,9 +95,7 @@ remit.request('counter.increment')()
 * [remit](#requireremitoptions--remit-)
 * [Request](#requestdata-)
 * [#request / #req](#remitrequestendpoint-options--request-)
-* [#persistentRequest / #preq](#templates)
 * [#emit](#templates)
-* [#delayedEmit / #demit](#templates)
 * [Response](#responsedata-)
 * [#respond / #res / #endpoint](#remitrespondendpoint-options--response-)
 * [#listen / #on](#templates-1)
@@ -120,18 +108,10 @@ A _Remit_ instance representing a single connection to the AMQ in use.
 
 ##### Properties
 
-* [`request`](#remitrequestendpoint-options--request-)
-* [`req`](#remitrequestendpoint-options--request-)
-* [`persistentRequest`](#templates)
-* [`preq`](#templates)
+* [`request` (`req`)](#remitrequestendpoint-options--request-)
 * [`emit`](#templates)
-* [`delayedEmit`](#templates)
-* [`demit`](#templates)
-* [`respond`](#remitrespondendpoint-options--response-)
-* [`res`](#remitrespondendpoint-options--response-)
-* [`endpoint`](#remitrespondendpoint-options--response-)
-* [`listen`](#templates-1)
-* [`on`](#templates-1)
+* [`respond` (`res`, `endpoint`)](#remitrespondendpoint-options--response-)
+* [`listen` (`on`)](#templates-1)
 
 ------
 
