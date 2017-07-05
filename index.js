@@ -11,6 +11,7 @@ function Remit (options) {
 
   this.version = packageJson.version
   this._emitter = new EventEmitter()
+  this._publishPools = {}
 
   this._options = {
     exchange: options.exchange || 'remit',
