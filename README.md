@@ -173,29 +173,6 @@ Sets up a request pointed at the specified `endpoint` with the given `options`.
 
 ##### Returns [`Request`](#requestdata-)
 
-##### Templates
-
-Some basic options templates are also set up as separate functions to allow for some semantically-pleasing set-ups without having to skim through objects to figure out what's happening.
-
-``` js
-// remit.persistentRequest
-// remit.preq
-{
-  "some": "thing"
-}
-
-// remit.emit
-{
-  "some": "thing"
-}
-
-// remit.delayedEmit
-// remit.demit
-{
-  "some": "thing"
-}
-```
-
 ##### AMQ behaviour
 
 1. If a reply is sought, follow sub-steps, otherwise skip to step #2
