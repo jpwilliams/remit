@@ -56,7 +56,9 @@ function Remit (opts) {
                     if (err) return callback(err)
 
                     channel.on('error', () => {})
-                    channel.on('close', () => {})
+                    channel.on('close', () => {
+                        channel.closed = true
+                    })
 
                     return callback(null, channel)
                 })
@@ -64,7 +66,10 @@ function Remit (opts) {
         },
 
         dispose: (channel, callback) => {
-            callback()
+            process.nextTick(() => {
+                if (channel.closed) return callback()
+                channel.close(callback)
+            })
         },
 
         min: 5,
