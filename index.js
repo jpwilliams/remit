@@ -600,8 +600,7 @@ Remit.prototype.__assert_exchange = function __assert_exchange (callback) {
             autoDelete: true
         }, (err, ok) => {
             if (err) {
-                console.error(err)
-                self._worker_pool.remove(channel)
+                throw err
             }
 
             self._worker_pool.release(channel)
