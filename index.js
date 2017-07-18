@@ -24,11 +24,13 @@ function Remit (options) {
   }
 
   this.request =
+  this.requestOne =
   this.req = Request.apply(this, [{
     expectReply: true
   }])
 
-  this.emit = Request.apply(this, [{
+  this.emit =
+  this.publish = Request.apply(this, [{
     expectReply: false
   }])
 
