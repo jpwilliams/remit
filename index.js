@@ -2,7 +2,6 @@ const packageJson = require('./package.json')
 const EventEmitter = require('eventemitter3')
 const Request = require('./lib/Request')
 const Response = require('./lib/Response')
-const aliases = require('./resources/aliases')
 const connect = require('./lib/assertions/connection')
 const bootWorkChannelPool = require('./lib/assertions/bootWorkChannelPool')
 
