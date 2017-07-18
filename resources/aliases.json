@@ -1,6 +1,0 @@
-{
-  "request": ["req"],
-  "emit": [],
-  "respond": ["res", "endpoint"],
-  "listen": ["on"]
-}

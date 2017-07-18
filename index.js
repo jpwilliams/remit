@@ -23,7 +23,8 @@ function Remit (options) {
     listenerCount: 0
   }
 
-  this.request = Request.apply(this, [{
+  this.request =
+  this.req = Request.apply(this, [{
     expectReply: true
   }])
 
@@ -31,12 +32,15 @@ function Remit (options) {
     expectReply: false
   }])
 
-  this.respond = Response.apply(this, [{
+  this.respond =
+  this.res =
+  this.endpoint = Response.apply(this, [{
     shouldAck: false,
     shouldReply: true
   }])
 
-  this.listen = Response.apply(this, [{
+  this.listen =
+  this.on = Response.apply(this, [{
     shouldAck: true,
     shouldReply: false,
 
@@ -46,12 +50,6 @@ function Remit (options) {
       return options
     }
   }])
-
-  Object.keys(aliases).forEach((key) => {
-    aliases[key].forEach((alias) => {
-      this[alias] = this[key]
-    })
-  })
 
   connect.apply(this, [this._options])
   this._workChannelPool = bootWorkChannelPool.apply(this)
