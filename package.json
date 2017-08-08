@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "amqplib": "^0.5.1",
-    "debug": "^2.6.8",
+    "debug": "^3.0.0",
     "pool2": "^1.4.1",
     "stack-trace": "0.0.9",
     "uuid": "^3.0.1"
