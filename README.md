@@ -1,425 +1,444 @@
-![Dependencies](https://david-dm.org/jpwilliams/remit.svg)
-![Downloads](https://img.shields.io/npm/dm/remit.svg)
+# remit
 
-# What's Remit?
-A small set of functionality used to create microservices that don't need to be aware of one-another's existence. It uses AMQP at its core to manage service discovery-like behaviour without the need to explicitly connect one service to another.
+A wrapper for RabbitMQ for communication between microservices. No service discovery needed.
 
-# Contents
-
-* [Simple usage](#simple-usage)
-* [Pre-requisites](#pre-requisites)
-* [Installation](#installation)
-* [Key examples](#key-examples)
-* [API reference](#api-reference)
-* [Improvements](#improvements)
-
-# Simple usage
-
-`remit` makes use of four simple commands: `req` (request), `res` (respond), `emit` and `listen`.
-
-* `req` requests data from a defined endpoint which, in turn, is created using `res`
-* `listen` waits for messages `emit`ted from anywhere in the system.
-
-A connection to your AMQP server's required before you can get going, but you can easily do that!
-
-```javascript
-const remit = require('remit')({
-	name: 'my_service', // this is required for a service that has a listener
-	url: 'amqp://localhost'
-})
-```
-
-After that, the world is yours! Here are some basic examples of the four commands mentioned above.
-
-```javascript
-// API
-remit.req('add', {
-	first: 2,
-	second: 7
-}, function (err, data) {
-	console.log('The result is ' + data)
-})
-
-// Server
-remit.res('add', function (args, done) {
-	done(null, (args.first + args.second))
-
-	remit.emit('something.happened', args)
-})
-
-// Listener 1
-remit.listen('something.happened', function (args, done) {
-	console.log(args)
-
-	// We return done() to acknowledge that the task has been completed
-	return done()
-})
-
-// Listener 2
-remit.listen('something.#', function (args) {
-	console.log('Something... did something...')
-
-	return done()
-})
-
-/*
-	1. The API requests the 'add' endpoint.
-	2. The Server responds with the result of the sum.
-	3. The API logs 'The result is 9'.
-	4. The Server emits the 'something.happened' event.
-	5. Listener 1 logs the arguments the API sent.
-	6. Listener 2 logs 'Something... did something...'.
-*/
-```
-
-# Pre-requisites
-
-To use `remit` you'll need:
-* A _RabbitMQ_ server (_Remit_ `1.2.0+` requires `>=3.4.0`)
-* _Node v4.x.x_
-* _npm_
-
-# Installation
-
-Once your _RabbitMQ_ server's up and running, simply use `npm` to install `remit`!
-```javascript
+``` sh
 npm install remit
 ```
 
-# Key examples
+``` js
+remit
+  .endpoint('user')
+  .handler((event) => {
+    return {
+      name: 'Jack Williams',
+      email: 'jack@wildfire.gg'
+    }
+  })
 
-There are two methods for sending messages with `remit`: _request_ or _emit_.
+// another service/process
+const user = await remit.request('user')()
+console.log(user)
 
-A _request_ implies that the requester wants a response back, whereas using an _emission_ means you wish to notify other services of an event without requiring their input.
-
-Let's start with a simple authentication example. We'll set up an API that our user can request to log in.
-
-```javascript
-// Import remit and connect to our AMQP server
-const remit = require('remit')()
-
-// Import whatever HTTP API creator we want
-const api = require('some-api-maker')
-
-// Set up a route using our API creator
-api.get('/login', function (req, res) {
-	// Send a request via remit to the 'user.login' endpoint
-	remit.req('user.login', {
-		username: req.username,
-		password: req.password
-	}, function (err, data) {
-		//If there's something wrong...
-		if (err) return res.failure(err)
-
-		// Otherwise, woohoo! We're logged in!
-		return res.success(data.user)
-	})
-})
+/* {
+  name: 'Jack Williams',
+  email: 'jack@wildfire.gg'
+} */
 ```
 
-Awesome! Now we'll set up the authentication service that'll respond to the request.
+---
 
-```javascript
-// Import remit and connect to our AMQP server
-const remit = require('remit')()
+## What's remit?
 
-// Respond to 'user.login' events
-remit.res('user.login', function (args, done) {
-	// If it's not Mr. Bean, send back an error!
-	if (args.username !== 'Mr. Bean') return done('You\'re not Mr. Bean!')
+A simple wrapper over [RabbitMQ](http://www.rabbitmq.com) to provide [RPC](https://en.wikipedia.org/wiki/Remote_procedure_call) and [ESB](https://en.wikipedia.org/wiki/Enterprise_service_bus)-style behaviour.
 
-	// Otherwise, let's "log in"
-	done(null, {
-		username: 'Mr. Bean',
-		birthday: '14/06/1961'
-	})
-})
+It supports **request/response** calls (e.g. requesting a user's profile), **emitting events** to the entire system (e.g. telling any services interested that a user has been created) and basic **scheduling** of messages (e.g. recalculating something every 5 minutes), all **load balanced** sacross grouped services and redundant; if a service dies, another will pick up the slack.
+
+There are four types you can use with Remit.
+
+* [request](#), which fetches data from an [endpoint](#)
+* [emit](#), which emits data to [listen](#)ers
+
+Endpoints and listeners are grouped by "Service Name" specified as `name` or the environment variable `REMIT_NAME` when creating a Remit instance. This grouping means only a single consumer in that group will receive a message. This is used for scaling services.
+
+---
+
+## Contents
+
+* [What's remit?](#)
+* [Recommendations](#)
+* [API/Usage](#)
+* [Events](#)
+* [Handlers](#)
+
+---
+
+## API/Usage
+
+* [request(event)](#)
+  * [request.on(eventName, listener)](#)
+  * [request.fallback(data)](#)
+  * [request.options(options)](#)
+  * [request.ready()](#)
+  * [request.send([data[, options]]) OR request([data[, options]])](#)
+* [endpoint(event[, ...handlers])](#)
+  * [endpoint.handler(...handlers)](#)
+  * [endpoint.on(eventName, listener)](#)
+  * [endpoint.options(options)](#)
+  * [endpoint.start()](#)
+* [emit(event)](#)
+  * [emit.on(eventName, listener)](#)
+  * [emit.options(options)](#)
+  * [emit.ready()](#)
+  * [emit.send([data[, options]]) OR emit([data[, options]])](#)
+* [listen(event[, ...handlers])](#)
+  * [listen.handler(...handlers)](#)
+  * [listen.on(eventName, listener)](#)
+  * [listen.options(options)](#)
+  * [listen.start()](#)
+  
+---
+
+#### `request(event)`
+
+* `event` &lt;string&gt; | &lt;Object&gt;
+
+Create a new request for data from an [endpoint](#) by calling the event dictated by `event`. If an object is passed, `event` is required. See [`request.options`](#) for available options.
+
+``` js
+remit.request('foo.bar')
 ```
 
-Done. That's it. Our `API` service will request an answer to the `user.login` endpoint and our server will respond. Simples.
+`timeout` and `priority` are explained and can be changed at any stage using [`request.options()`](#).
 
-Let's now say that we want a service to listen out for if it's a user's birthday and send them an email if they've logged in on that day! With most other systems, this would require adding business logic to our login service to explicitly call some `birthday` service and check, but not with `remit`.
+The request is sent by running the returned function (synonymous with calling `.send()`), passing the data you wish the make the request with.
 
-At the end of our `authentication` service, let's add an emission of `user.login.success`.
+For example, to retrieve a user from the `'user.profile'` endpoint using an ID:
 
-```javascript
-// Respond to 'user.login' events
-remit.res('user.login', function (args, done) {
-	// If it's not Mr. Bean, send back an error!
-	if (args.username !== 'Mr. Bean') return done('You\'re not Mr. Bean!')
-
-	// Otherwise, let's "log in"
-	let user = {
-		username: 'Mr. Bean',
-		birthday: '14/06/1961'
-	}
-
-	done(null, user)
-
-	// After we've logged the user in, let's emit that everything went well!
-	remit.emit('user.login.success', { user })
-})
+``` js
+const getUserProfile = remit.request('user.profile')
+const user = await getUserProfile(123)
+console.log(user)
+// prints the user's data
 ```
 
-Now that we've done that, _any_ other services on the network can listen in on that event and react accordingly!
+Returns a new request.
 
-Let's make our `birthday` service.
+#### `request.on(eventName, listener)`
 
-```javascript
-const remit = require('remit')({
-	name: 'birthday'	
-})
+* `eventName` &lt;any&gt;
+* `listener` &lt;Function&gt;
 
-const beanmail = require('send-mail-to-mr-bean')
+Subscribe to this request's dumb EventEmitter. For more information on the events emitted, see the [Events](#) section.
 
-remit.listen('user.login.success', function (args, done) {
-	let today = '14/06/1961'
+Returns a reference to the `request`, so that calls can be chained.
 
-	if (today === args.user.birthday) {
-		beanmail.send()
-	}
+#### `request.fallback(data)`
 
-	return done()
-})
+* `data` &lt;any&gt;
+
+Specifies data to be returned if a request fails for any reason. Can be used to gracefully handle failing calls across multiple requests. When a fallback is set, any request that fails will instead resolve successfully with the data passed to this function.
+
+``` js
+const request = remit
+  .request('user.list')
+  .fallback([])
 ```
 
-Sorted. Now every time someone logs in successfully, we run a check to see if it's their birthday.
+The error is still sent over the request's EventEmitter, so listening to `'error'` lets you handle the error however you wish.
 
-Emissions can be hooked into by any number of different services, but only one "worker" per service will receive each emission.
+You can change the fallback at any point in a request's life and unset it by explicitly passing `undefined`.
 
-So let's also start logging every time a user performs _any_ action. We can do this by using the `#` wildcard.
+Returns a reference to the `request`, so that calls can be chained.
 
-```javascript
-const remit = require('remit')({
-	name: 'logger'
-})
+#### `request.options(options)`
 
-let user_action_counter = 0
+* `options` &lt;Object&gt;
+  * `event` &lt;string&gt; **Required**
+  * `timeout` &lt;integer&gt; **Default:** `30000`
+  * `priority` &lt;integer&gt; **Default:** `0`
 
-remit.listen('user.#', function (args, done) {
-	user_action_counter++
+Set various options for the request. Can be done at any point in a request's life but will not affect timeouts in which requests have already been sent.
 
-	return done()
-})
+``` js
+const request = remit
+  .request('foo.bar')
+  .options({
+    timeout: 5000
+  })
 ```
 
-# API reference
+Settings `timeout` to `0` will result in there being no timeout. Otherwise it is the amount of time in milliseconds to wait before declaring the request "timed out".
 
-* [`Remit`](#requireremitoptions) - Instantiate Remit
-* [`req`](#reqendpoint-data-callback-options--timeout-5000) - Make a request to an endpoint
-* [`treq`](#treqendpoint-data-callback-options--timeout-5000) - Make a transient request to an endpoint
-* [`res`](#resendpoint-callback-context-options--queuename-my_queue) - Define an endpoint
-* [`emit`](#emitevent-data-options) - Emit to all listeners of an event
-* [`demit`](#demitevent-eta-data-options) - Emit to all listeners of an event at a specified time
-* [`listen`](#listenevent-callback-context-options--queuename-my_queue) - Listen to emissions of an event
+`priority` can be an integer between `0` and `10`. Higher priority requests will go to the front of queues over lower priority requests.
 
-## require('remit')([options])
+Returns a reference to the `request`, so that calls can be chained.
 
-Creates a Remit object, with the specified `options` (if any), ready for use with further functions.
+#### `request.ready()`
 
-#### Arguments
+Returns a promise which resolves when the request is ready to make calls.
 
-* `options` - _Optional_ An object containing options to give to the Remit instantiation. Currently-acceptable options are:
-	* `name` - The name to give the current service. This is used heavily for load balancing requests, so instances of the same service (that should load balance requests between themselves) should have the same name. Is _required_ if using [`listen`](#listenevent-callback-context-options--queuename-my_queue).
-	* `url` - The URL to use to connect to the AMQ. Defaults to `amqp://localhost`.
-	* `connection` - If you already have a valid AMQ connection, you can provide and use it here. The use cases for this are slim but present.
-	* `prefetch` - The number of messages a service should hold in memory before waiting for an acknowledgement. Defaults to `128`.
-
-## req(endpoint, data, [callback], [options = {timeout: 5000}])
-
-Makes a request to the specified `endpoint` with `data`, optionally returning a `callback` detailing the response. It's also possible to provide `options`, namely a `timeout`.
-
-#### Arguments
-
-* `endpoint` - A string endpoint that can be defined using [`res`](#resendpoint-callback-context-options--queuename-my_queue).
-* `data` - Can be any of `boolean`, `string`, `array` or `object` and will be passed to the responder.
-* `callback(err, data)` - _Optional_ A callback which is called either when the responder has handled the message or the message "timed out" waiting for a response. In the case of a timeout, `err` will be populated, though the responder can also explicitly control what is sent back in both `err` and `data`.
-* `options` - _Optional_ Supply an object here to explicitly define certain options for the AMQ message. `timeout` is the amount of time in milliseconds to wait for a response before returning an error. There is currently only one _defined_ use case for this, though it gives you total freedom as to what options you provide.
-
-#### Examples
-
-```javascript
-// Calls the 'user.profile', endpoint, but doesn't ask for a response.
-remit.req('user.profile', {
-	username: 'jacob123'
-})
+``` js
+const request = await remit
+  .request('foo'.bar')
+  .ready()
 ```
 
-```javascript
-// Calls the 'user.profile' endpoint asking for a response but timing out after the default of 5 seconds.
-remit.req('user.profile', {
-	username: 'jacob123'
-}, (err, data) => {
-	if (err) console.error('Oh no! Something went wrong!', err)
+Any calls made before this promise is resolved will be automatically queued until it is.
 
-	return console.log('Got the result back!', data)
-})
+Returns a reference to the `request`, so that calls can be chained.
+
+#### `request.send([data[, options]])`
+
+_Synonymous with `request([data[, options]])`_
+
+* `data` &lt;any&gt; **Default:** `null`
+* `options` &lt;Object&gt;
+
+Sends a request. `data` can be anything that plays nicely with [JSON.stringify](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify). If `data` is not defined, `null` is sent (`undefined` cannot be parsed into JSON).
+
+``` js
+const getUser = remit.request('user.getProfile')
+
+// either of these perform the same action
+const user = await getUser(123)
+const user = await getUser.send(123)
 ```
 
-```javascript
-// Calls the 'user.profile', endpoint asking for a response but timing out after a custom wait of 20 seconds.
-remit.req('user.profile', {
-	username: 'jacob123'
-}, (err, data) => {
-	if (err) console.error('Oh no! Something went wrong!', err)
+`options` can contain anything provided in [`request.options`](#), but the options provided will only apply to that single request.
 
-	return console.log('Got the result back!', data)
-}, {
-	timeout: 20000
-})
+Returns a promise that resolves with data if the request was successful or rejects with an error if not. Always resolves if a [fallback](#) is set.
+
+---
+
+#### `endpoint(event[, ...handlers])`
+
+* `event` &lt;string&gt; | &lt;Object&gt;
+* `...handlers` &lt;Function&gt;
+
+Creates an endpoint that replies to [`request`](#)s.
+
+`event` is the code requests will use to call the endpoint. If an object is passed, `event` is required. For available options, see [`endpoint.options`](#).
+
+``` js
+const endpoint = await remit
+  .endpoint('foo.bar', console.log)
+  .start()
 ```
 
-#### AMQ behaviour
+[`start()`](#) must be called on an endpoint to "boot it up" ready to receive requests. An endpoint that's started without a `handler` (a function or series of functions that returns data to send back to a request) will throw. You can set handlers here or using [`endpoint.handler`](#). To learn more about handlers, check the [Handlers](#) section.
 
-1. Confirms connection and exchange exists.
-2. If a callback's provided, confirm the existence of and consume from a "result queue" specific to this process.
-3. Publish the message using the provided `endpoint` as a routing key.
+Returns a new endpoint.
 
-## treq(endpoint, data, [callback], [options = {timeout: 5000}])
+#### `endpoint.handler(...handlers)`
 
-Identical to [`req`](#reqendpoint-data-callback-options--timeout-5000) but will remove the request message upon timing out. Useful for calls from APIs. For example, if a client makes a request to delete a piece of content but that request times out, it'd be jarring to have that action suddenly undertaken at an unspecified interval afterwards. `treq` is useful for avoiding that circumstance.
+* `...handlers` &lt;Function&gt;
 
-#### AMQ behaviour
+Set the handler(s) for this endpoint. Only one series of handlers can be active at a time, though the active handlers can be changed using this call at any time.
 
-Like [`req`](#reqendpoint-data-callback-options--timeout-5000) but adds an `expiration` field to the message.
-
-## res(endpoint, callback, [context], [options = {queueName: 'my_queue'}])
-
-Defines an endpoint that responds to [`req`](#reqendpoint-data-callback-options--timeout-5000)s. Returning the provided `callback` is a nessecity regardless of whether the requester wants a response as it is to used to acknowledge messages as being handled.
-
-#### Arguments
-
-* `endpoint` - A string endpoint that requetsers will use to reach this function.
-* `callback(args, done)` - A callback containing data from the requester in `args` and requiring the running of `done(err, data)` to signify completion regardless of the requester's requirement for a response.
-* `context` - _Optional_ The context in which `callback(args, done)` will be called.
-* `options` - _Optional_ An object that can contain a custom queue to listen for messages on.
-
-#### Examples
-
-```javascript
-// Defines the 'user.profile' profile endpoint, retrieving a user from our dummy database
-remit.res('user.profile', function (args, done) {
-	if (args.username) return done('No username provided!')
-
-	mydb.get_user(args.username, function (err, user) {
-    	return done(err, user)
-    })
-})
+``` js
+const endpoint = remit.endpoint('foo.bar')
+endpoint.handler(logRequest, sendFoo)
+endpoint.start()
 ```
 
-#### AMQ behaviour
+For more information on handlers, see the [Handlers](#) section.
 
-1. Confirms connection and exchange exists.
-2. Binds to and consumes from the queue with the name defined by `endpoint`
+Returns a reference to the `endpoint`, so that calls can be chained.
 
-## emit(event, [data], [options])
+#### `endpoint.on(eventName, listener)`
 
-Emits to all [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers of the specified event, optionally with some `data`. This is essentially the same as [`req`](#reqendpoint-data-callback-options--timeout-5000) but no `callback` can be defined and `broadcast` is set to `true` in the message options.
+* `eventName` &lt;any&gt;
+* `listener` &lt;Function&gt;
 
-#### Arguments
+Subscribe to this endpoint's dumb EventEmitter. For more information on the events emitted, see the [Events](#) section.
 
-* `event` - The "event" to emit to [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers.
-* `data` - _Optional_ Data to send to [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers. Can be any of `boolean`, `string`, `array` or `object`.
-* `options` - _Optional_ Like [`req`](#reqendpoint-data-callback-options--timeout-5000), supply an object here to explicitly define certain options for the AMQ message.
+Returns a reference to the `endpoint`, so that calls can be chained.
 
-#### Examples
+#### `endpoint.options(options)`
 
-```javascript
-// Emits the 'user.registered' event to all listeners
-remit.emit('user.registered')
+#### `endpoint.start()`
+
+----
+
+#### `emit.on(eventName, listener)`
+
+* `eventName` &lt;any&gt;
+* `listener` &lt;Function&gt;
+
+Subscribe to this emitter's dumb EventEmitter. For more information on the events emitted, see the [Events](#) section.
+
+Returns a reference to the `emit`, so that calls can be chained.
+
+#### `emit.options(options)`
+
+#### `emit.ready()`
+
+#### `emit.send([data[, options]])`
+
+---
+
+#### `listen.handler(...handlers)`
+
+#### `listen.on(eventName, listener)`
+
+* `eventName` &lt;any&gt;
+* `listener` &lt;Function&gt;
+
+Subscribe to this listener's dumb EventEmitter. For more information on the events emitted, see the [Events](#) section.
+
+Returns a reference to the `listen`, so that calls can be chained.
+
+#### `listen.options(options)`
+
+#### `listen.start()`
+
+## Events
+
+[`request`](#), [`endpoint`](#), [`emit`](#) and [`listen`](#) all export EventEmitters that emit events about their incoming/outgoing messages.
+
+All of the events can be listened to by using the `.on()` function, providing an `eventName` and a `listener` function, like so:
+
+``` js
+const request = remit.request('foo.bar')
+const endpoint = remit.endpoint('foo.bar')
+const emit = remit.emit('foo.bar')
+const listen = remit.listen('foo.bar')
+
+request.on('...', ...)
+endpoint.on('...', ...)
+emit.on('...', ...)
+listen.on('...', ...)
 ```
 
-```javascript
-// Emits the 'user.registered' event, supplying some of the user's basic information
-remit.emit('user.registered', {
-	username: 'jacob123',
-    name: 'Jacob Four',
-    email: 'jacob@five.com',
-    website: 'www.six.com'
-})
+Events can also be listened to _globally_, by adding a listener directly to the type. This listener will receive events for all instances of that type. This makes it easier to introduce centralised logging to remit's services.
+
+``` js
+remit.request.on('...', ...)
+remit.endpoint.on('...', ...)
+remit.emit.on('...', ...)
+remit.listen.on('...', ...)
 ```
 
-#### AMQ behaviour
+The following events can be listened to:
 
-1. Confirms connection and exchange exists.
-2. Publish the message using the provided `endpoint` as a routing key and with the `broadcast` option set to `true`.
+| Event | Description | Returns | request | endpoint | emit | listen |
+| ----- | ----------- | ------- |  :---:  |   :---:  | :---: | :---: |
+| `data` | Data was received | Raw data | ✅ | ✅ | ❌ | ✅ |
+| `error` | An error occured or was passed back from an endpoint | Error | ✅ | ✅ | ✅ | ✅ |
+| `sent` | Data was sent | The event that was sent | ✅ | ✅ | ✅ | ❌ |
+| `success` | The action was successful | The successful result/data | ✅ | ✅ | ✅ | ✅ |
+| `timeout` | The request timed out | A [timeout object](#) | ✅ | ❌ | ❌ | ❌ |
 
-## demit(event, eta, [data], [options])
+## Handlers
 
-Like [`emit`](#emitevent-data-options) but tells [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers to wait until `eta` to running their respective functions. Similar in design and functionality to [Celery's `eta` usage](http://docs.celeryproject.org/en/latest/userguide/calling.html#eta-and-countdown). Largely useful for tasks that should repeat like session health checks.
+[Endpoints](#) and [listeners](#) use handlers to reply to or, uh, handle incoming messages. In both cases, these are functions that can be passed when creating the listener or added/changed real-time by using the `.handler()` method.
 
-#### Arguments
+All handlers are passed two items: `event` and `callback`. If `callback` is mapped, you will need to call it to indicate success/failure (see [Handling completion](#) below). If you do not map a callback, you can reply synchronously or by returning a Promise.
 
-* `event` - The "event" to emit to [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers.
-* `eta` - A `date` object being the earliest time you wish listeners to respond to the emission.
-* `data` - _Optional_ Data to send to [`listen`](#listenevent-callback-context-options--queuename-my_queue)ers. Can be any of `boolean`, `string`, `array` or `object`.
-* `options` - _Optional_ Like [`req`](#reqendpoint-data-callback-options--timeout-5000), supply an object here to explicitly define certain options for the AMQ message.
+Handlers are used for determining when a message has been successfully dealt with. Internally, Remit uses this to ascertain when to draw more messages in from the queue and, in the case of listeners, when to remove the message from the server.
 
-#### Examples
+RabbitMQ gives an at-least-once delivery guarantee, meaning that, ideally, listeners are idempotent. If a service dies before it has successfully returned from a handler, all messages it was processing will be passed back to the server and distributed to another service (or the same service once it reboots).
 
-```javascript
-// Emits a "health.check" event that should be processed in 24 hours
-let tomorrow = new Date()
-tomorrow.setDate(tomorrow.getDate() + 1)
+#### Simple returns
 
-remit.demit('health.check', tomorrow)
+Here, we create a simple endpoint that returns `{"foo": "bar"}` whenever called:
+
+``` js
+const endpoint = await remit
+  .endpoint('foo.bar', () => {
+    return {foo: 'bar'}
+  })
+  .start()
 ```
 
-```javascript
-// Emits a "health.check" event that should be processed in 24 hours, providing some relevant data
-let tomorrow = new Date()
-tomorrow.setDate(tomorrow.getDate() + 1)
+#### Incoming data
 
-remit.demit('health.check', tomorrow, {
-	current_health: 52
-})
+We can also parse incoming data and gather information on the request by using the given `event` object.
+
+``` js
+const endpoint = await remit
+  .endpoint('foo.bar', (event) => {
+    console.log(event)
+  })
+  .start()
 ```
 
-#### AMQ behaviour
+#### Event object
 
-Like [`emit`](#emitevent-data-options) but adds a `timestamp` field to the message which is understood by [`listen`](#listenevent-callback-context-options--queuename-my_queue)-based functions.
+When called, the above will log out the event it's been passed. Here's an example of an event object:
 
-## listen(event, callback, [context], [options = {queueName: 'my_queue'}])
+``` js
+{
+  // the time the message was taken from the server
+  started: <Date>,
 
-Listens to events emitted using [`emit`](#emitevent-data-options). Listeners are grouped for load balancing using their `name` provided when instantiating Remit.
+  // a unique ID for the message
+  // (useful for idempotency purposes)
+  eventId: '01BQ5MRBJJ2AK9N23BW4S84WN1',
 
-While listeners can't sent data back to the [`emit`](#emitevent-data-options)ter, calling the `callback` is still required for confirming successful message delivery.
+  // the eventName used to call this endpoint/listener
+  // (useful when using wildcard listeners)
+  eventType: 'foo.bar',
 
-#### Arguments
+  // the name of the service that called/emitted this
+  resource: 'service-user',
 
-* `event` - The "event" to listen for emissions of.
-* `callback(args, done)` - A callback containing data from the emitter in `args` and requiring the running of `done(err)` to signify completion.
-* `context` - _Optional_ The context in which `callback(args, done)` will be called.
-* `options` - _Optional_ An object that can contain a custom queue to listen for messages on.
+  // the data sent with the request
+  data: {userId: 123},
 
-#### Examples
-
-```javascript
-// Listens for the "user.registered" event, logging the outputted data
-remit.listen('user.registered', function (args, done) {
-	console.log('User registered!', args)
-    
-    return done()
-})
+  // the time the message was created
+  timestamp: <Date>
+}
 ```
 
-#### AMQ behaviour
+#### Handling completion
 
-1. Confirms connection and exchange exists.
-2. Sets a service-unique queue name and confirms it exists
-3. Binds the queue to the routing key defined by `event` and starts consuming from said queue
+Handlers provide you with three different ways of showing completion: Promises, callbacks or a synchronous call. To decide what the handler should treat as a successful result, remit follows the following pattern:
 
-# Improvements
+```
+if handler does not map second (callback) property:
+├── if handler returns a promise:
+│   └── Watch resolution/rejection of result
+│   else:
+│   └── Return synchronous result
+else:
+└── Wait for callback to be called
+```
 
-`remit`'s in its very early stages. Basic use is working well, but here are some features I'm looking at implementing to make things a bit more diverse.
+In any case, if an exception is thrown or an error is passed as the first value to the callback, then the error is passed back to the requester (if an endpoint) or the message sent to a dead-letter queue (if a listener).
 
-* Ability to specify exchange per connection, endpoint or event
-* Cleaner error handling (along with some standards)
-* ~~Removal of all use of `process.exit()`~~
-* Connection retrying when losing connection to the AMQ
-* ~~Use promises instead of callbacks~~
-* Warnings for duplicate `req` subscriptions
-* ~~Better handling of `req` timeouts~~
-* Ability for emissions to receive (multiple) results from listeners if required (I really want to use generators for this)
-* Obey the `JSON-RPC 2.0` spec
-* Tests!
+#### Middleware
+
+You can provide multiple handlers in a sequence to act as middleware, similar to that of Express's. Every handler in the line is passed the same `event` object, so to pass data between the handlers, mutate that.
+
+A common use case for middleware is validation. Here, a middleware handler adds a property to incoming data before continuing:
+
+``` js
+const endpoint = await remit
+  .endpoint('foo.bar')
+  .handler((event) => {
+    event.foo = 'bar'
+  }, (event) => {
+    console.log(event)
+    // event will contain `foo: 'bar'`
+
+    return true
+  })
+  .start()
+```
+
+When using middleware, it's important to know how to break the chain if you need to. If anything other than `undefined` is returned in any handler (middleware or otherwise via a Promise/callback/sync call), the chain will break and that data will be returned to the requester.
+
+If an exception is thrown at any point, the chain will also break and the error will be returned to the requester.
+
+This means you can fall out of chains early. Let's say we want to fake an empty response for user #21:
+
+``` js
+const endpoint = await remit
+  .endpoint('foo.bar')
+  .handler((event) => {
+    if (event.data.userId === 21) {
+      return []
+    }
+  }, (event) => {
+    return calculateUserList()
+  })
+  .start()
+```
+
+Or perhaps exit if a call is done with no authorisation token:
+
+``` js
+const endpoint = await remit
+  .endpoint('foo.bar')
+  .handler(async (event) => {
+    if (!event.data.authToken) {
+      throw new Error('No authorisation token given')
+    }
+
+    event.data.decodedToken = await decodeAuthToken(event.data.authToken)
+  }, (event) => {
+    return performGuardedCall()
+  })
+```
