@@ -5,7 +5,7 @@ function ChannelPool (connection) {
     create: async () => {
       const con = await connection
       const channel = await con.createChannel()
-      channel.on('error', err => console.error(err))
+      channel.on('error', console.error)
       channel.on('close', () => console.log('Worker channel closed'))
 
       return channel
