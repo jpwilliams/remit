@@ -7,7 +7,8 @@
     "node": ">=6"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "coverage": "./node_modules/.bin/nyc ./node_modules/.bin/mocha --require test/bootstrap test/*.test.js test/**/*.test.js && ./node_modules/.bin/nyc report --reporter=lcov",
+    "test": "./node_modules/.bin/mocha --require test/bootstrap test/*.test.js test/**/*.test.js"
   },
   "author": "Jack Williams <jack@wildfire.gg>",
   "license": "MIT",
