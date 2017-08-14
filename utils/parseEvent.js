@@ -1,10 +1,13 @@
-function parseEvent (properties = {}, fields = {}, data) {
+function parseEvent (properties = {}, fields = {}, data, isCustom) {
   const event = {
-    started: new Date(),
     eventId: properties.messageId,
     eventType: fields.routingKey,
     resource: properties.appId,
     data: data
+  }
+
+  if (!isCustom) {
+    event.started = new Date()
   }
 
   if (properties.headers) {
