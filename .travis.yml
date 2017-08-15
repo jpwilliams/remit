@@ -4,4 +4,4 @@ sudo: required
 node_js:
   - "node"
 cache: yarn
-script: "npm run test"
+script: "npm run travis"
