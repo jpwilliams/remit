@@ -27,7 +27,7 @@ describe('Emitter', function () {
     })
 
     it('should throw if no event given', function () {
-      expect(remit.emit.bind(null)).to.throw()
+      expect(remit.emit.bind(null)).to.throw('No/invalid event specified when creating an emission')
     })
 
     it('should return an Emitter', function () {
