@@ -8,10 +8,11 @@ function parseUrl (input) {
       throw new Error('Incorrect protocol')
     }
   } else {
-    if (parsedUrl.path && !parsedUrl.host) {
-      parsedUrl.host = parsedUrl.path
+    if (parsedUrl.pathname && !parsedUrl.host) {
+      parsedUrl.host = parsedUrl.pathname
       parsedUrl.path = null
       parsedUrl.pathname = null
+      parsedUrl.href = null
     }
 
     parsedUrl.protocol = 'amqp:'
@@ -20,7 +21,7 @@ function parseUrl (input) {
 
   // Overwrite query parameters, as we don't want to allow
   // any outside specification.
-  parsedUrl.query = {
+  parsedUrl.query = Object.assign({}, {
     // Maximum permissible size of a frame (in bytes)
     // to negotiate with clients. Setting to 0 means
     // "unlimited" but will trigger a bug in some QPid
@@ -35,7 +36,7 @@ function parseUrl (input) {
     //
     frameMax: '0x1000', // 4,096 (4kb)
     heartbeat: '15' // Frequent hearbeat
-  }
+  }, parsedUrl.query)
 
   // `search` overwrites `query` if defined
   parsedUrl.search = ''
