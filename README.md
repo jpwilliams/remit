@@ -1,5 +1,7 @@
 # remit
 
+[![Build Status](https://travis-ci.org/jpwilliams/remit.svg?branch=v2)](https://travis-ci.org/jpwilliams/remit) [![Coverage Status](https://coveralls.io/repos/github/jpwilliams/remit/badge.svg?branch=v2)](https://coveralls.io/github/jpwilliams/remit?branch=v2) [![npm downloads per month](https://img.shields.io/npm/dm/remit.svg)](https://www.npmjs.com/package/remit) [![npm version](https://img.shields.io/npm/v/remit.svg)](https://www.npmjs.com/package/remit)
+
 A wrapper for RabbitMQ for communication between microservices. No service discovery needed.
 
 ``` sh
@@ -76,7 +78,7 @@ Endpoints and listeners are grouped by "Service Name" specified as `name` or the
   * [listen.on(eventName, listener)](#)
   * [listen.options(options)](#)
   * [listen.start()](#)
-  
+
 ---
 
 #### `request(event)`
