@@ -196,8 +196,10 @@ describe('Endpoint', function () {
     it('should return data early from synchronous middleware', async function () {
       const endpoint = await remit
         .endpoint('return-4')
-        .handler((event, callback) => {
-          callback(null, 'foobar4')
+        .handler(() => {
+          return 'foobar4'
+        }, () => {
+          return 'fail'
         })
         .start()
 
@@ -205,19 +207,214 @@ describe('Endpoint', function () {
       expect(result).to.equal('foobar4')
     })
 
-    it('should return data early from promises middleware')
-    it('should return data early from callback middleware')
-    it('should return error from synchronous middleware')
-    it('should return error from promises middleware')
-    it('should return error from callback middleware')
-    it('should return final data from synchronous middleware')
-    it('should return final data from promises middleware')
-    it('should return final data from callback middleware')
-    it('should return final error from synchronous middleware')
-    it('should return final error from promises middleware')
-    it('should return final error from callback middleware')
-    it('should pass the same `event` to every handler')
-    it('should allow changing handlers')
+    it('should return data early from promises middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-5')
+        .handler(async () => {
+          return 'foobar5'
+        }, async () => {
+          return 'fail'
+        })
+        .start()
+
+      const result = await remit.request('return-5')()
+      expect(result).to.equal('foobar5')
+    })
+
+    it('should return data early from callback middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-6')
+        .handler((event, callback) => {
+          callback(null, 'foobar6')
+        }, (event, callback) => {
+          callback(null, 'fail')
+        })
+        .start()
+
+      const result = await remit.request('return-6')()
+      expect(result).to.equal('foobar6')
+    })
+
+    it('should return error from synchronous middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-err-4')
+        .handler(() => {
+          throw 'fail4'
+        }, () => {
+          throw 'fail'
+        })
+        .start()
+
+      try {
+        await remit.request('return-err-4')()
+        throw new Error('Request succeeded')
+      } catch (e) {
+        expect(e).to.equal('fail4')
+      }
+    })
+
+    it('should return error from promises middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-err-5')
+        .handler(async () => {
+          throw 'fail5'
+        }, async () => {
+          throw 'fail'
+        })
+        .start()
+
+      try {
+        await remit.request('return-err-5')()
+        throw new Error('Request succeeded')
+      } catch (e) {
+        expect(e).to.equal('fail5')
+      }
+    })
+
+    it('should return error from callback middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-err-6')
+        .handler((event, callback) => {
+          callback('fail6')
+        }, (event, callback) => {
+          callback('fail')
+        })
+        .start()
+
+      try {
+        await remit.request('return-err-6')()
+        throw new Error('Request succeeded')
+      } catch (e) {
+        expect(e).to.equal('fail6')
+      }
+    })
+
+    it('should return final data from synchronous middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-7')
+        .handler(() => {
+          return
+        }, () => {
+          return 'foobar7'
+        })
+        .start()
+
+      const result = await remit.request('return-7')()
+      expect(result).to.equal('foobar7')
+    })
+
+    it('should return final data from promises middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-8')
+        .handler(async () => {
+          return
+        }, async () => {
+          return 'foobar8'
+        })
+        .start()
+
+      const result = await remit.request('return-8')()
+      expect(result).to.equal('foobar8')
+    })
+
+    it('should return final data from callback middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-9')
+        .handler((event, callback) => {
+          callback()
+        }, (event, callback) => {
+          callback(null, 'foobar9')
+        })
+        .start()
+
+      const result = await remit.request('return-9')()
+      expect(result).to.equal('foobar9')
+    })
+
+    it('should return final error from synchronous middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-err-7')
+        .handler(() => {
+          return
+        }, () => {
+          throw 'fail7'
+        })
+        .start()
+
+      try {
+        await remit.request('return-err-7')()
+        throw new Error('Request succeeded')
+      } catch (e) {
+        expect(e).to.equal('fail7')
+      }
+    })
+
+    it('should return final error from promises middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-err-8')
+        .handler(async () => {
+          return
+        }, async () => {
+          throw 'fail8'
+        })
+        .start()
+
+      try {
+        await remit.request('return-err-8')()
+        throw new Error('Request succeeded')
+      } catch (e) {
+        expect(e).to.equal('fail8')
+      }
+    })
+
+    it('should return final error from callback middleware', async function () {
+      const endpoint = await remit
+        .endpoint('return-err-9')
+        .handler((event, callback) => {
+          callback()
+        }, (event, callback) => {
+          callback('fail9')
+        })
+        .start()
+
+      try {
+        await remit.request('return-err-9')()
+        throw new Error('Request succeeded')
+      } catch (e) {
+        expect(e).to.equal('fail9')
+      }
+    })
+
+    it('should pass the same `event` to every handler', async function () {
+      const endpoint = await remit
+        .endpoint('same-event')
+        .handler((event) => {
+          event.custom = 'blamblam'
+        }, (event) => {
+          expect(event.custom).to.equal('blamblam')
+
+          return event.custom
+        })
+        .start()
+
+      const result = await remit.request('same-event')()
+      expect(result).to.equal('blamblam')
+    })
+
+    it('should allow changing handlers realtime', async function () {
+      const endpoint = await remit
+        .endpoint('changing-handlers')
+        .handler(() => 'foobar')
+        .start()
+
+      const req = await remit.request('changing-handlers').ready()
+      let res = await req()
+      expect(res).to.equal('foobar')
+      endpoint.handler(() => 'bazqux')
+      res = await req()
+      expect(res).to.equal('bazqux')
+    })
+
     it('should throw if consumer cancelled remotely')
   })
 })
