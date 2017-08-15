@@ -48,8 +48,8 @@
   "homepage": "https://github.com/jpwilliams/remit#readme",
   "files": [
     "test",
-    "resources",
-    "lib"
+    "lib",
+    "utils"
   ],
   "devDependencies": {
     "chai": "^4.1.1",
