@@ -1,4 +1,4 @@
-/* global describe, it, before */
+/* global describe, it, before, expect */
 const Remit = require('../')
 
 describe('Endpoint', function () {

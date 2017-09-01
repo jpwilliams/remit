@@ -117,7 +117,7 @@ describe('Emitter', function () {
         expect(event.resource).to.equal(sentEvent.resource)
         expect(event.resourceTrace).to.equal(sentEvent.resourceTrace)
       })
-    }),
+    })
 
     it('should delay message by 1 seconds', async function () {
       this.slow(3000)
