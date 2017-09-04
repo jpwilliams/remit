@@ -41,7 +41,7 @@ There are four types you can use with Remit.
 * [request](#), which fetches data from an [endpoint](#)
 * [emit](#), which emits data to [listen](#)ers
 
-Endpoints and listeners are grouped by "Service Name" specified as `name` or the environment variable `REMIT_NAME` when creating a Remit instance. This grouping means only a single consumer in that group will receive a message. This is used for scaling services.
+Endpoints and listeners are grouped by "Service Name" specified as `name` or the environment variable `REMIT_NAME` when creating a Remit instance. This grouping means only a single consumer in that group will receive a message. This is used for scaling services: when creating multiple instances of a service, make sure they all have the same name.
 
 ---
 
