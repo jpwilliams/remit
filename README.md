@@ -34,7 +34,7 @@ console.log(user)
 
 A simple wrapper over [RabbitMQ](http://www.rabbitmq.com) to provide [RPC](https://en.wikipedia.org/wiki/Remote_procedure_call) and [ESB](https://en.wikipedia.org/wiki/Enterprise_service_bus)-style behaviour.
 
-It supports **request/response** calls (e.g. requesting a user's profile), **emitting events** to the entire system (e.g. telling any services interested that a user has been created) and basic **scheduling** of messages (e.g. recalculating something every 5 minutes), all **load balanced** sacross grouped services and redundant; if a service dies, another will pick up the slack.
+It supports **request/response** calls (e.g. requesting a user's profile), **emitting events** to the entire system (e.g. telling any services interested that a user has been created) and basic **scheduling** of messages (e.g. recalculating something every 5 minutes), all **load balanced** across grouped services and redundant; if a service dies, another will pick up the slack.
 
 There are four types you can use with Remit.
 
