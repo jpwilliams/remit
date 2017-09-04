@@ -162,7 +162,7 @@ Returns a promise which resolves when the request is ready to make calls.
 
 ``` js
 const request = await remit
-  .request('foo'.bar')
+  .request('foo.bar')
   .ready()
 ```
 
