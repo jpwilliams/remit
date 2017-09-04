@@ -1,0 +1,7 @@
+language: node_js
+services: rabbitmq
+sudo: required
+node_js:
+  - "node"
+cache: yarn
+script: "npm run travis"
