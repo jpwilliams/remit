@@ -20,7 +20,7 @@
     "eventemitter3": "^2.0.3",
     "generic-pool": "^3.1.7",
     "serialize-error": "^2.1.0",
-    "ulid": "^0.2.0"
+    "ulid": "^1.0.0"
   },
   "repository": {
     "type": "git",
