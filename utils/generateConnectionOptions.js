@@ -9,7 +9,7 @@ function generateConnectionOptions (name) {
       repository: packageJson.repository.url,
       package: `https://www.npmjs.com/package/${packageJson.name}`,
       host: {
-        name: os.hostname(),
+        name: `${os.userInfo().username}@${os.hostname()}`,
         platform: `${os.type()}@${os.release()}`,
         pid: process.pid,
         node: process.version
