@@ -4,7 +4,7 @@
   "description": "A small set of functionality used to create microservices that don't need to be aware of one-another's existence.",
   "main": "index.js",
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   },
   "scripts": {
     "coverage": "./node_modules/.bin/nyc ./node_modules/.bin/mocha --require test/bootstrap test/*.test.js test/**/*.test.js --exit && ./node_modules/.bin/nyc report --reporter=lcov",
