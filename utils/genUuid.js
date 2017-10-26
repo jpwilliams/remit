@@ -1,4 +1,4 @@
-const ulid = require('ulid')
+const ulid = require('ulid').ulid
 
 function genUuid () {
   return ulid()
