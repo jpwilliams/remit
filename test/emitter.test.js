@@ -26,29 +26,38 @@ describe('Emitter', function () {
       emitter = remit.emit('foo')
     })
 
-    it('should curry when not exhausted', async function () {
-      await remit
+    it('should curry when not exhausted', function (done) {
+      remit
         .listen('had_jalfrezi')
         .handler(async (event) => {
-          expect(event.data).to.equal('had a jalfrezi')
+          try {
+            expect(event.data).to.equal('had a jalfrezi')
+            done()
+          } catch (err) {
+            done(err)
+          }
 
           return event.data
         })
         .start()
-
-      remit.emit('had_jalfrezi')('had a jalfrezi')
+        .then(_ => remit.emit('had_jalfrezi')('had a jalfrezi'))
     })
 
-    it('should not curry when exhausted', async function () {
-      await remit
+    it('should not curry when exhausted', function (done) {
+      remit
         .listen('had_vindaloo')
         .handler(async (event) => {
-          expect(event.data).to.equal('had a vindaloo')
+          try {
+            expect(event.data).to.equal('had a vindaloo')
+            done()
+          } catch (err) {
+            done(err)
+          }
+
           return event.data
         })
         .start()
-
-      remit.emit('had_vindaloo', 'had a vindaloo')
+        .then(_ => remit.emit('had_vindaloo', 'had a vindaloo'))
     })
   })
 
