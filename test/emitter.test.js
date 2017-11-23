@@ -28,27 +28,27 @@ describe('Emitter', function () {
 
     it('should curry when not exhausted', async function () {
       await remit
-        .listen('jalfrezi')
+        .listen('got_jalfrezi')
         .handler(async (event) => {
-          expect(event.data).to.equal('jalfrezi was crazy')
+          expect(event.data).to.equal('had a jalfrezi')
 
           return event.data
         })
         .start()
 
-      remit.emit('jalfrezi')('jalfrezi was crazy')
+      remit.emit('got_jalfrezi')('had a jalfrezi')
     })
 
     it('should not curry when exhausted', async function () {
       await remit
-        .listen('vindaloo')
+        .listen('got_vindaloo')
         .handler(async (event) => {
-          expect(event.data).to.equal('vindaloo put me on the loo')
+          expect(event.data).to.equal('had a vindaloo')
           return event.data
         })
         .start()
 
-      remit.emit('vindaloo', 'vindaloo put me on the loo')
+      remit.emit('got_vindaloo', 'had a vindaloo')
     })
   })
 

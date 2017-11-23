@@ -11,26 +11,26 @@ describe('Request', function () {
   describe('#currying', function () {
     it('should curry when not exhausted', async function () {
       await remit
-        .endpoint('jalfrezi')
+        .endpoint('get_jalfrezi')
         .handler(async (event) => {
           return event.data
         })
         .start()
 
-      const result = await remit.request('jalfrezi')('jalfrezi was crazy')
-      expect(result).to.equal('jalfrezi was crazy')
+      const result = await remit.request('get_jalfrezi')('got a jalfrezi')
+      expect(result).to.equal('got a jalfrezi')
     })
 
     it('should not curry when exhausted', async function () {
       await remit
-        .endpoint('vindaloo')
+        .endpoint('get_vindaloo')
         .handler(async (event) => {
           return event.data
         })
         .start()
 
-      const result = await remit.request('vindaloo', 'vindaloo put me on the loo')
-      expect(result).to.equal('vindaloo put me on the loo')
+      const result = await remit.request('get_vindaloo', 'got a vindaloo')
+      expect(result).to.equal('got a vindaloo')
     })
   })
 
