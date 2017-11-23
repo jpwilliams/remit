@@ -8,6 +8,32 @@ describe('Request', function () {
     remit = Remit()
   })
 
+  describe('#currying', function () {
+    it('should curry when not exhausted', async function () {
+      await remit
+        .endpoint('jalfrezi')
+        .handler(async (event) => {
+          return event.data
+        })
+        .start()
+
+      const result = await remit.request('jalfrezi')('jalfrezi was crazy')
+      expect(result).to.equal('jalfrezi was crazy')
+    })
+
+    it('should not curry when exhausted', async function () {
+      await remit
+        .endpoint('vindaloo')
+        .handler(async (event) => {
+          return event.data
+        })
+        .start()
+
+      const result = await remit.request('vindaloo', 'vindaloo put me on the loo')
+      expect(result).to.equal('vindaloo put me on the loo')
+    })
+  })
+
   describe('#object', function () {
     it('should be a function')
     it('should expose "on" global function')

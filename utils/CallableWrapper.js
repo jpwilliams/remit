@@ -31,6 +31,10 @@ class CallableWrapper extends CallableInstance {
       ret.on(k, (...x) => this._emitter.emit(k, ...x))
     }
 
+    if (typeof ret._sendable === 'function') {
+      return ret._sendable()
+    }
+
     return ret
   }
 }

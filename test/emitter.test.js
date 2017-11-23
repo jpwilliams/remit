@@ -18,6 +18,40 @@ describe('Emitter', function () {
     })
   })
 
+  describe('#currying', function () {
+    let remit, emitter
+
+    before(function () {
+      remit = Remit()
+      emitter = remit.emit('foo')
+    })
+
+    it('should curry when not exhausted', async function () {
+      await remit
+        .listen('jalfrezi')
+        .handler(async (event) => {
+          expect(event.data).to.equal('jalfrezi was crazy')
+
+          return event.data
+        })
+        .start()
+
+      remit.emit('jalfrezi')('jalfrezi was crazy')
+    })
+
+    it('should not curry when exhausted', async function () {
+      await remit
+        .listen('vindaloo')
+        .handler(async (event) => {
+          expect(event.data).to.equal('vindaloo put me on the loo')
+          return event.data
+        })
+        .start()
+
+      remit.emit('vindaloo', 'vindaloo put me on the loo')
+    })
+  })
+
   describe('#return', function () {
     let remit, emitter
 
