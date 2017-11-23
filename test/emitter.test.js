@@ -28,7 +28,7 @@ describe('Emitter', function () {
 
     it('should curry when not exhausted', async function () {
       await remit
-        .listen('got_jalfrezi')
+        .listen('had_jalfrezi')
         .handler(async (event) => {
           expect(event.data).to.equal('had a jalfrezi')
 
@@ -36,19 +36,19 @@ describe('Emitter', function () {
         })
         .start()
 
-      remit.emit('got_jalfrezi')('had a jalfrezi')
+      remit.emit('had_jalfrezi')('had a jalfrezi')
     })
 
     it('should not curry when exhausted', async function () {
       await remit
-        .listen('got_vindaloo')
+        .listen('had_vindaloo')
         .handler(async (event) => {
           expect(event.data).to.equal('had a vindaloo')
           return event.data
         })
         .start()
 
-      remit.emit('got_vindaloo', 'had a vindaloo')
+      remit.emit('had_vindaloo', 'had a vindaloo')
     })
   })
 
