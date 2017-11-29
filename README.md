@@ -48,9 +48,9 @@ npm install remit
     - [`emit(name | EmitOpts)(data) (Promise)`](#)
     - [`emit(name | EmitOpts).send(data) (Promise)`](#)
     - [`emit.options(EmitOpts) (Remit)`](#)
-    - [`emit.ready() (Promise)`](#)
     - [`emit.on(event, Handler) (Remit)`](#)
-
+    - [`emit.ready() (Promise)`](#)
+ 
   - [`endpoint(name [, ...Handler])`](#)
     - [`endpoint(name, ...Handler) (Remit)`](#)
     - [`endpoint(name).handler(...Handler) (Remit)`](#)
