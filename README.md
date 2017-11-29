@@ -26,19 +26,19 @@ npm install remit
 ## API
 
 - `Remit`
-  - [`request(name | opts [, data ])`](#request)
-    - [`request(name, data) (Promise)`](#request_curry)
-    - [`request(name)(data) (Promise)`](#request_curry)
-    - [`request(name).send(data) (Promise)`](#request_send)
+  - [`request(name | RequestOpts [, data ])`](#request)
+    - [`request(name | RequestOpts, data) (Promise)`](#request_curry)
+    - [`request(name | RequestOpts)(data) (Promise)`](#request_curry)
+    - [`request(name | RequestOpts).send(data) (Promise)`](#request_send)
     - [`request.options(opts) (Remit)`](#request_options)
     - [`request.fallback(data) (Remit)`](#request_fallback)
     - [`request.on(event, fn) (Remit)`]()
 
-  - [`emit(name | opts [, data ])`](#emit)
-    - [`emit(name, data) (Promise)`](#emit_invoke)
-    - [`emit(name)(data) (Promise)`](#emit_curry)
-    - [`emit(name).send(data) (Promise)`](#emit_send)
-    - [`emit.options(opts) (Remit)`](#emit_options)
+  - [`emit(name | EmitOpts [, data ])`](#emit)
+    - [`emit(name | EmitOpts, data) (Promise)`](#emit_invoke)
+    - [`emit(name | EmitOpts)(data) (Promise)`](#emit_curry)
+    - [`emit(name | EmitOpts).send(data) (Promise)`](#emit_send)
+    - [`emit.options(EmitOpts) (Remit)`](#emit_options)
     - [`emit.on(event, fn) (Remit)`]()
 
   - [`endpoint(name [, ...fn])`](#endpoint)
