@@ -8,10 +8,11 @@
 
 It is built atop [RabbitMQ](http://www.rabbitmq.com) as an [ESB](https://en.wikipedia.org/wiki/Enterprise_service_bus)
 
-### Why Remit?
-- Service discovery is included
-- Request/Response (asynchronous) for RPC
-- PubSub (aka send-and-forget) for durable tasks
+### What is included?
+- [x] Service discovery
+- [x] Request/Response RPC
+- [x] PubSub (_aka send-and-forget_) messaging
+- [ ] Tracing (_not yet_)
 
 ---
 
