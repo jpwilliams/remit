@@ -26,7 +26,7 @@ npm install remit
 
 ## API
 
-- `Remit`
+- [`Remit`](#)
   - [`Types`](#)
     - [`RequestOpts`](#)
     - [`EmitOpts`](#)
