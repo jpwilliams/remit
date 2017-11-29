@@ -9,9 +9,9 @@
 It is built atop [RabbitMQ](http://www.rabbitmq.com) as an [ESB](https://en.wikipedia.org/wiki/Enterprise_service_bus)
 
 ### Why Remit?
-- [x] Service discovery is included
-- [x] Request/Response (asynchronous) for RPC
-- [x] PubSub (aka send-and-forget) for durable tasks
+- [x] Service discovery
+- [x] Request/Response RPC
+- [x] PubSub (aka send-and-forget) messaging
 - [ ] Tracing (_not yet_)
 
 ---
@@ -27,7 +27,7 @@ npm install remit
 ## API
 
 - `Remit`
-  - `Types`
+  - [`Types`](#)
     - [`RequestOpts`](#)
     - [`EmitOpts`](#)
     - [`Handler`](#)
