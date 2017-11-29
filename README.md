@@ -8,10 +8,10 @@
 
 It is built atop [RabbitMQ](http://www.rabbitmq.com) as an [ESB](https://en.wikipedia.org/wiki/Enterprise_service_bus)
 
-### What is included?
-- [x] Service discovery
-- [x] Request/Response RPC
-- [x] PubSub (_aka send-and-forget_) messaging
+### Why Remit?
+- [x] Service discovery is included
+- [x] Request/Response (asynchronous) for RPC
+- [x] PubSub (aka send-and-forget) for durable tasks
 - [ ] Tracing (_not yet_)
 
 ---
@@ -33,30 +33,35 @@ npm install remit
     - [`Handler`](#)
     - [`Event`](#)
     - [`Data`](#)
-  - [`request(name | RequestOpts [, data ])`](#request)
-    - [`request(name | RequestOpts, data) (Promise)`](#request_curry)
-    - [`request(name | RequestOpts)(data) (Promise)`](#request_curry)
-    - [`request(name | RequestOpts).send(data) (Promise)`](#request_send)
-    - [`request.options(opts) (Remit)`](#request_options)
-    - [`request.fallback(data) (Remit)`](#request_fallback)
-    - [`request.on(event, Handler) (Remit)`](#)
-  - [`emit(name | EmitOpts [, data ])`](#emit)
-    - [`emit(name | EmitOpts, data) (Promise)`](#emit_invoke)
-    - [`emit(name | EmitOpts)(data) (Promise)`](#emit_curry)
-    - [`emit(name | EmitOpts).send(data) (Promise)`](#emit_send)
-    - [`emit.options(EmitOpts) (Remit)`](#emit_options)
-    - [`emit.on(event, Handler) (Remit)`](#)
-  - [`endpoint(name [, ...Handler])`](#endpoint)
-    - [`endpoint(name, ...Handler) (Remit)`](#endpoint_invoke)
-    - [`endpoint(name).handler(...Handler) (Remit)`](#endpoint_handle)
-    - [`endpoint.options(opts) (Remit)`](#endpoint_options)
-    - [`endpoint.on(event, Handler) (Remit)`](#)
-    - [`endpoint.start() (Promise)`](#endpoint_start)
 
-  - [`listener(name [, ...Handler ])`](#listener)
-    - [`listener(name, ...Handler) (Remit)`](#listener_invoke)
-    - [`listener(name).handler(...Handler) (Remit)`](#listener_invoke)
-    - [`listener.options(opts) (Remit)`](#listener_options)
+  - [`request(name | RequestOpts [, data ])`](#)
+    - [`request(name | RequestOpts, data) (Promise)`](#)
+    - [`request(name | RequestOpts)(data) (Promise)`](#)
+    - [`request(name | RequestOpts).send(data) (Promise)`](#)
+    - [`request.options(opts) (Remit)`](#)
+    - [`request.fallback(data) (Remit)`](#)
+    - [`request.on(event, Handler) (Remit)`](#)
+    - [`endpoint.ready() (Promise)`](#)
+
+  - [`emit(name | EmitOpts [, data ])`](#)
+    - [`emit(name | EmitOpts, data) (Promise)`](#)
+    - [`emit(name | EmitOpts)(data) (Promise)`](#)
+    - [`emit(name | EmitOpts).send(data) (Promise)`](#)
+    - [`emit.options(EmitOpts) (Remit)`](#)
+    - [`emit.ready() (Promise)`](#)
+    - [`emit.on(event, Handler) (Remit)`](#)
+
+  - [`endpoint(name [, ...Handler])`](#)
+    - [`endpoint(name, ...Handler) (Remit)`](#)
+    - [`endpoint(name).handler(...Handler) (Remit)`](#)
+    - [`endpoint.options(opts) (Remit)`](#)
+    - [`endpoint.on(event, Handler) (Remit)`](#)
+    - [`endpoint.start() (Promise)`](#)
+
+  - [`listener(name [, ...Handler ])`](#)
+    - [`listener(name, ...Handler) (Remit)`](#)
+    - [`listener(name).handler(...Handler) (Remit)`](#)
+    - [`listener.options(opts) (Remit)`](#)
     - [`listener.on(event, Handler) (Remit)`](#)
-    - [`listener.start() (Promise)`](#listener_start)
+    - [`listener.start() (Promise)`](#)
 ---
