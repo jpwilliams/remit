@@ -35,6 +35,7 @@ npm install remit
     - [`Handler`](#handler)
     - [`Event`](##event)
     - [`Data`](#data)
+    - [`EventTarget`](#eventtarget)
 
   - [`API`](#api)
     - [`request(name | RequestOpts [, Data ])`](requestname--requestopts-data)
@@ -43,7 +44,7 @@ npm install remit
       - [`request(name | RequestOpts).send(Data) (Promise)`](#requestname--requestoptssenddata-promise)
       - [`request.options(opts) (Remit)`](#requestoptionsopts-remit)
       - [`request.fallback(Data) (Remit)`](#requestfallbackdata-remit)
-      - [`request.on(Event, Handler) (Remit)`](#requestonevent-handler-remit)
+      - [`request.on(EventTarget, Handler) (Remit)`](#requestonevent-handler-remit)
       - [`request.ready() (Promise)`](#requestready-promise)
 
     - [`emit(name | EmitOpts [, Data ])`](#emitname--emitopts--data-)
@@ -51,21 +52,21 @@ npm install remit
       - [`emit(name | EmitOpts)(Data) (Promise)`](#emitname--emitoptsdata-promise)
       - [`emit(name | EmitOpts).send(Data) (Promise)`](#emitname--emitoptssenddata-promise)
       - [`emit.options(EmitOpts) (Remit)`](#emitoptionsemitopts-remit)
-      - [`emit.on(Event, Handler) (Remit)`](#emitonevent-handler-remit)
+      - [`emit.on(EventTarget, Handler) (Remit)`](#emitonevent-handler-remit)
       - [`emit.ready() (Promise)`](#emitready-promise)
   
     - [`endpoint(name [, ...Handler])`](#endpointname--handler)
       - [`endpoint(name, ...Handler) (Remit)`](#endpointname-handler-remit)
       - [`endpoint(name).handler(...Handler) (Remit)`](#endpointnamehandlerhandler-remit)
       - [`endpoint.options(EndpointOpts) (Remit)`](#endpointoptionsendpointopts-remit)
-      - [`endpoint.on(Event, Handler) (Remit)`](#endpointonevent-handler-remit)
+      - [`endpoint.on(EventTarget, Handler) (Remit)`](#endpointonevent-handler-remit)
       - [`endpoint.start() (Promise)`](#endpointstart-promise)
 
     - [`listener(name [, ...Handler ])`](#listenername--handler-)
       - [`listener(name, ...Handler) (Remit)`](#listenername-handler-remit)
       - [`listener(name).handler(...Handler) (Remit)`](#listenernamehandlerhandler-remit)
       - [`listener.options(ListenerOpts) (Remit)`](#listeneroptionslisteneropts-remit)
-      - [`listener.on(Event, Handler) (Remit)`](#listeneronevent-handler-remit)
+      - [`listener.on(EventTarget, Handler) (Remit)`](#listeneronevent-handler-remit)
       - [`listener.start() (Promise)`](#listenerstart-promise)
 ---
 
@@ -76,8 +77,8 @@ npm install remit
 RequestOpts {
   event: string;
   queue: string;
-  timeout? = 30000: number;
-  priority? = 0: number;
+  timeout=3000?: number;
+  priority=0?: number;
 }
 ```
 
@@ -87,7 +88,7 @@ EmitOpts {
   event: string;
   schedule?: number;
   delay?: number;
-  priority? = 0: number;
+  priority=0?: number;
 }
 ```
 
@@ -131,9 +132,28 @@ Event {
 Data array | arrayBuffer | buffer | string
 ```
 
+## `EventTarget`
+| Event | Description | Value | Request | Endpoint | Emit | Listen |
+| ----- | ----------- | ------- |  :---:  |   :---:  | :---: | :---: |
+| `data` | received data | Data | ✅ | ✅ | ❌ | ✅ |
+| `sent` | dispatched event | Event | ✅ | ✅ | ✅ | ❌ |
+| `error` | event failed | Error | ✅ | ✅ | ✅ | ✅ |
+| `timeout` | event failed to yield within timeout SLA | Error | ✅ | ❌ | ❌ | ❌ |
+| `success` | event successful yielded | Data | ✅ | ✅ | ✅ | ✅ |
+
 # `API`
-Examples will use the Promise 
-. You can use the Promise or callback style. See [using calbacks](#callbacks).
+Examples will use the Promise. You can use the Promise or callback style; for example:
+```javascript
+  // If you want to 'resolve' and yield a value
+  const resolveWithPromise = async event => event.data.reduced((a, b) => a + b, 0)
+  const resolveWithCallback = (event, done) => done(null, event.data.reduced((a, b) => a + b, 0))
+
+  // If you want to 'reject' and yield a error
+  const rejectWithPromise = async event => throw new Error('whoops')
+  const rejectWithCallback = (event, done) => done(new Error('whoops'))
+
+  Any of the above would work as an Handler
+```
 
 ## `request(name | RequestOpts [, Data ])`
 
@@ -185,7 +205,7 @@ add
   .catch(console.error)
 ```
 
-### `request.on(Event, Handler) (Remit)`
+### `request.on(EventTarget, Handler) (Remit)`
 ```javascript
 const add = remit.request('add')
 
@@ -279,7 +299,7 @@ add([5])
 })()
 ```
 
-### `emit.on(Event, Handler) (Remit)`
+### `emit.on(EventTarget, Handler) (Remit)`
 ```javascript
 ;(async function () {
   const add = remit.request('add')
@@ -318,6 +338,7 @@ add([5])
 ```
 
 ## `endpoint(name [, ...Handler])`
+You can provide multiple handlers in a sequence to act as middleware, similar to that of Express's. Every handler in the line is passed the same event object, so to pass data between the handlers, mutate that.
 
 ### `endpoint(name, ...Handler) (Remit)`
 ```javascript
@@ -397,7 +418,7 @@ add([5])
 })()
 ```
 
-### `endpoint.on(Event, Handler) (Remit)`
+### `endpoint.on(EventTarget, Handler) (Remit)`
 ```javascript
   const remit
     .endpoint('add')
@@ -424,6 +445,8 @@ add([5])
 ```
 
 ### `endpoint.start() (Promise)`
+start() must be called on an endpoint before it will receive requests. An endpoint that's started without a handler (a function or series of functions that returns data to send back to a request) will throw. You can set handlers here or using endpoint.handler.
+
 ```javascript
   const remit
     .endpoint('add')
@@ -451,16 +474,17 @@ add([5])
 ```
 
 ## `listener(name [, ...Handler])`
+You can provide multiple handlers in a sequence to act as middleware, similar to that of Express's. Every handler in the line is passed the same event object, so to pass data between the handlers, mutate that.
 
 ### `listener(name, ...Handler) (Remit)`
 ```javascript
 ;(async function () {
   remit
-    .listener('added', parse, added)
+    .listener('added', added)
     .start()
 
   async function added (event) {
-   return event.data.reduce((a, b) => a + b, 0)
+    console.log('added', event.data)
   }
 })()
 ```
@@ -475,7 +499,7 @@ add([5])
     .start()
 
   async function added (event) {
-   return event.data.reduce((a, b) => a + b, 0)
+    console.log('added', event.data)
   }
 })()
 ```
@@ -493,12 +517,12 @@ add([5])
     .start()
 
   async function added (event) {
-   return event.data.reduce((a, b) => a + b, 0)
+    console.log('added', event.data)
   }
 })()
 ```
 
-### `listener.on(Event, Handler) (Remit)`
+### `listener.on(EventTarget, Handler) (Remit)`
 ```javascript
   const remit
     .listener('added')
@@ -506,12 +530,14 @@ add([5])
     .handler(added)
 
   async function added (event) {
-   return event.data.reduce((a, b) => a + b, 0)
+    console.log('added', event.data)
   }
 })()
 ```
 
 ### `listener.start() (Promise)`
+start() must be called on an endpoint before it will receive requests. An endpoint that's started without a handler (a function or series of functions that returns data to send back to a request) will throw. You can set handlers here or using endpoint.handler.
+
 ```javascript
   const remit
     .listener('added')
@@ -519,7 +545,7 @@ add([5])
     .handler(added)
 
   async function added (event) {
-   return event.data.reduce((a, b) => a + b, 0)
+    console.log('added', event.data)
   }
 })()
 ```
