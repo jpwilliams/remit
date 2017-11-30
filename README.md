@@ -132,7 +132,8 @@ Data array | arrayBuffer | buffer | string
 ```
 
 # `API`
-Examples will use the Promise API. You can use the Promise or callback style. See [using calbacks](#callbacks).
+Examples will use the Promise 
+. You can use the Promise or callback style. See [using calbacks](#callbacks).
 
 ## `request(name | RequestOpts [, Data ])`
 
@@ -297,7 +298,7 @@ add([5])
 ```
 
 ### `emit.ready() (Promise)`
- ```javascript
+```javascript
 ;(async function () {
   const add = remit.request('add')
   const added = remit.emit('added')
@@ -319,24 +320,206 @@ add([5])
 ## `endpoint(name [, ...Handler])`
 
 ### `endpoint(name, ...Handler) (Remit)`
+```javascript
+;(async function () {
+  remit
+    .endpoint('add', parse, add)
+    .start()
 
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
+    }
+
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
 ### `endpoint(name).handler(...Handler) (Remit)`
+```javascript
+;(async function () {
+
+  const remit
+    .endpoint('add')
+    .handler(
+      parse,
+      add
+    )
+    .start()
+
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
+    }
+
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
 
 ### `endpoint.options(EndpointOpts) (Remit)`
+```javascript
+;(async function () {
+
+  const remit
+    .endpoint('add')
+    .options({
+      queue: 'custom-queue-name' // you probably don't want to specify the queue name yourself - but you could.
+    })
+    .handler(
+      parse,
+      add
+    )
+    .start()
+
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
+    }
+
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
 
 ### `endpoint.on(Event, Handler) (Remit)`
+```javascript
+  const remit
+    .endpoint('add')
+    .on('data', console.log)
+    .handler(
+      parse,
+      add
+    )
+    .start()
+
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
+    }
+
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
 
 ### `endpoint.start() (Promise)`
+```javascript
+  const remit
+    .endpoint('add')
+    .on('data', console.log)
+    .handler(
+      parse,
+      add
+    )
+    .start()
+    .then(() => console.log('endpoint has started'))
 
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
+    }
 
-## `listener(name [, ...Handler ])`
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
+
+## `listener(name [, ...Handler])`
 
 ### `listener(name, ...Handler) (Remit)`
+```javascript
+;(async function () {
+  remit
+    .listener('added', parse, added)
+    .start()
+
+  async function added (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
 
 ### `listener(name).handler(...Handler) (Remit)`
+```javascript
+;(async function () {
 
-### `listener.options(ListenerOpts) (Remit)`
+  const remit
+    .listener('added')
+    .handler(added)
+    .start()
+
+  async function added (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
+
+### `listener.options(listenerOpts) (Remit)`
+```javascript
+;(async function () {
+
+  const remit
+    .listener('added')
+    .options({
+      queue: 'custom-queue-name' // you probably don't want to specify the queue name yourself - but you could.
+    })
+    .handler(added)
+    .start()
+
+  async function added (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
 
 ### `listener.on(Event, Handler) (Remit)`
+```javascript
+  const remit
+    .listener('added')
+    .on('data', console.log)
+    .handler(added)
+
+  async function added (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
 
 ### `listener.start() (Promise)`
+```javascript
+  const remit
+    .listener('added')
+    .on('data', console.log)
+    .handler(added)
+
+  async function added (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
