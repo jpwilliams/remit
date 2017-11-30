@@ -109,10 +109,16 @@ ListenerOpts {
 ```
 
 ## `Handler`
+A handle can be passed as a promise, calllback function or just a plain value; for example:
 ```javascript
-function fn (Event) {} 
+  // If you want to 'resolve' and yield a value
+  const resolveWithPromise = async event => event.data.reduced((a, b) => a + b, 0)
+  const resolveWithCallback = (event, done) => done(null, event.data.reduced((a, b) => a + b, 0))
+  const resolveWithPlainValue = 10
 
-Handler fn | Data
+  // If you want to 'reject' and yield a error
+  const rejectWithPromise = async event => throw new Error('whoops')
+  const rejectWithCallback = (event, done) => done(new Error('whoops'))
 ```
 
 ## `Event`
@@ -142,19 +148,6 @@ Data array | arrayBuffer | buffer | string
 | `success` | event successful yielded | Data | ✅ | ✅ | ✅ | ✅ |
 
 # `API`
-Examples will use the Promise. You can use the Promise or callback style; for example:
-```javascript
-  // If you want to 'resolve' and yield a value
-  const resolveWithPromise = async event => event.data.reduced((a, b) => a + b, 0)
-  const resolveWithCallback = (event, done) => done(null, event.data.reduced((a, b) => a + b, 0))
-
-  // If you want to 'reject' and yield a error
-  const rejectWithPromise = async event => throw new Error('whoops')
-  const rejectWithCallback = (event, done) => done(new Error('whoops'))
-
-  Any of the above would work as an Handler
-```
-
 ## `request(name | RequestOpts [, Data ])`
 
 ### `request(name | RequestOpts, Data) (Promise)`
