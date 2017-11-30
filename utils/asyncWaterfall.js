@@ -1,10 +1,3 @@
-// TODO how should middleware work?
-// do we _always_ just pass back the event, making
-// users mutate that to pass data along?
-// that would be similar to req/res in express,
-// which is good.
-// or should we allow manually passing data by using
-// list.shift()?
 const serializeError = require('serialize-error')
 
 function waterfall (...fns) {
