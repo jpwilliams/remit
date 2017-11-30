@@ -36,36 +36,37 @@ npm install remit
     - [`Event`](##event)
     - [`Data`](#data)
 
-  - [`request(name | RequestOpts [, Data ])`](requestname--requestopts-data)
-    - [`request(name | RequestOpts, Data) (Promise)`](#requestname--requestopts-data-promise)
-    - [`request(name | RequestOpts)(Data) (Promise)`](#requestname--requestoptsdata-promise)
-    - [`request(name | RequestOpts).send(Data) (Promise)`](#requestname--requestoptssenddata-promise)
-    - [`request.options(opts) (Remit)`](#requestoptionsopts-remit)
-    - [`request.fallback(Data) (Remit)`](#requestfallbackdata-remit)
-    - [`request.on(Event, Handler) (Remit)`](#requestonevent-handler-remit)
-    - [`request.ready() (Promise)`](#requestready-promise)
+  - [`API`](#api)
+    - [`request(name | RequestOpts [, Data ])`](requestname--requestopts-data)
+      - [`request(name | RequestOpts, Data) (Promise)`](#requestname--requestopts-data-promise)
+      - [`request(name | RequestOpts)(Data) (Promise)`](#requestname--requestoptsdata-promise)
+      - [`request(name | RequestOpts).send(Data) (Promise)`](#requestname--requestoptssenddata-promise)
+      - [`request.options(opts) (Remit)`](#requestoptionsopts-remit)
+      - [`request.fallback(Data) (Remit)`](#requestfallbackdata-remit)
+      - [`request.on(Event, Handler) (Remit)`](#requestonevent-handler-remit)
+      - [`request.ready() (Promise)`](#requestready-promise)
 
-  - [`emit(name | EmitOpts [, Data ])`](#emitname--emitopts--data-)
-    - [`emit(name | EmitOpts, Data) (Promise)`](#emitname--emitopts-data-promise)
-    - [`emit(name | EmitOpts)(Data) (Promise)`](#emitname--emitoptsdata-promise)
-    - [`emit(name | EmitOpts).send(Data) (Promise)`](#emitname--emitoptssenddata-promise)
-    - [`emit.options(EmitOpts) (Remit)`](#emitoptionsemitopts-remit)
-    - [`emit.on(Event, Handler) (Remit)`](#emitonevent-handler-remit)
-    - [`emit.ready() (Promise)`](#emitready-promise)
- 
-  - [`endpoint(name [, ...Handler])`](#endpointname--handler)
-    - [`endpoint(name, ...Handler) (Remit)`](#endpointname-handler-remit)
-    - [`endpoint(name).handler(...Handler) (Remit)`](#endpointnamehandlerhandler-remit)
-    - [`endpoint.options(EndpointOpts) (Remit)`](#endpointoptionsendpointopts-remit)
-    - [`endpoint.on(Event, Handler) (Remit)`](#endpointonevent-handler-remit)
-    - [`endpoint.start() (Promise)`](#endpointstart-promise)
+    - [`emit(name | EmitOpts [, Data ])`](#emitname--emitopts--data-)
+      - [`emit(name | EmitOpts, Data) (Promise)`](#emitname--emitopts-data-promise)
+      - [`emit(name | EmitOpts)(Data) (Promise)`](#emitname--emitoptsdata-promise)
+      - [`emit(name | EmitOpts).send(Data) (Promise)`](#emitname--emitoptssenddata-promise)
+      - [`emit.options(EmitOpts) (Remit)`](#emitoptionsemitopts-remit)
+      - [`emit.on(Event, Handler) (Remit)`](#emitonevent-handler-remit)
+      - [`emit.ready() (Promise)`](#emitready-promise)
+  
+    - [`endpoint(name [, ...Handler])`](#endpointname--handler)
+      - [`endpoint(name, ...Handler) (Remit)`](#endpointname-handler-remit)
+      - [`endpoint(name).handler(...Handler) (Remit)`](#endpointnamehandlerhandler-remit)
+      - [`endpoint.options(EndpointOpts) (Remit)`](#endpointoptionsendpointopts-remit)
+      - [`endpoint.on(Event, Handler) (Remit)`](#endpointonevent-handler-remit)
+      - [`endpoint.start() (Promise)`](#endpointstart-promise)
 
-  - [`listener(name [, ...Handler ])`](#listenername--handler-)
-    - [`listener(name, ...Handler) (Remit)`](#listenername-handler-remit)
-    - [`listener(name).handler(...Handler) (Remit)`](#listenernamehandlerhandler-remit)
-    - [`listener.options(ListenerOpts) (Remit)`](#listeneroptionslisteneropts-remit)
-    - [`listener.on(Event, Handler) (Remit)`](#listeneronevent-handler-remit)
-    - [`listener.start() (Promise)`](#listenerstart-promise)
+    - [`listener(name [, ...Handler ])`](#listenername--handler-)
+      - [`listener(name, ...Handler) (Remit)`](#listenername-handler-remit)
+      - [`listener(name).handler(...Handler) (Remit)`](#listenernamehandlerhandler-remit)
+      - [`listener.options(ListenerOpts) (Remit)`](#listeneroptionslisteneropts-remit)
+      - [`listener.on(Event, Handler) (Remit)`](#listeneronevent-handler-remit)
+      - [`listener.start() (Promise)`](#listenerstart-promise)
 ---
 
 # Types
@@ -108,7 +109,9 @@ ListenerOpts {
 
 ## `Handler`
 ```javascript
-function handler (Event) { ... }
+function fn (Event) {} 
+
+Handler fn | Data
 ```
 
 ## `Event`
@@ -128,16 +131,19 @@ Event {
 Data array | arrayBuffer | buffer | string
 ```
 
-# `request(name | RequestOpts [, Data ])`
+# `API`
+Examples will use the Promise API. You can use the Promise or callback style. See [using calbacks](#callbacks).
 
-## `request(name | RequestOpts, Data) (Promise)`
+## `request(name | RequestOpts [, Data ])`
+
+### `request(name | RequestOpts, Data) (Promise)`
 ```javascript
 remit.request('add', [5, 5])
   .then(console.log)
   .catch(console.error)
 ```
 
-## `request(name | RequestOpts)(Data) (Promise)`
+### `request(name | RequestOpts)(Data) (Promise)`
 ```javascript
 const add = remit.request('add')
 
@@ -146,7 +152,7 @@ add[5, 5])
   .catch(console.error)
 ```
 
-## `request(name | RequestOpts).send(Data) (Promise)`
+### `request(name | RequestOpts).send(Data) (Promise)`
 ```javascript
 const add = remit.request('add')
 
@@ -156,7 +162,7 @@ add
   .catch(console.error)
 ```
 
-## `request.options(RequestOpts) (Remit)`
+### `request.options(RequestOpts) (Remit)`
 ```javascript
 const add = remit.request('add')
 
@@ -166,7 +172,7 @@ add
   .then(console.log)
   .catch(console.error)
 ```
-## `request.fallback(Data) (Remit)`
+### `request.fallback(Data) (Remit)`
 ```javascript
 const add = remit.request('add')
 
@@ -178,7 +184,7 @@ add
   .catch(console.error)
 ```
 
-## `request.on(Event, Handler) (Remit)`
+### `request.on(Event, Handler) (Remit)`
 ```javascript
 const add = remit.request('add')
 
@@ -188,9 +194,9 @@ add([5, 5])
 add([5])
 ```
 
-# `emit(name | EmitOpts [, Data ])`
+## `emit(name | EmitOpts [, Data ])`
 
-## `emit(name | EmitOpts, Data) (Promise)`
+### `emit(name | EmitOpts, Data) (Promise)`
 ```javascript
 ;(async function () {
   const add = remit.request('add')
@@ -206,7 +212,7 @@ add([5])
 })()
 ```
 
-## `emit(name | EmitOpts)(Data) (Promise)`
+### `emit(name | EmitOpts)(Data) (Promise)`
 ```javascript
 ;(async function () {
   const add = remit.request('add')
@@ -222,7 +228,7 @@ add([5])
 })()
 ```
 
-## `emit(name | EmitOpts).send(Data) (Promise)`
+### `emit(name | EmitOpts).send(Data) (Promise)`
 ```javascript
 ;(async function () {
   const add = remit.request('add')
@@ -239,7 +245,7 @@ add([5])
 })()
 ```
 
-## `emit.options(EmitOpts) (Remit)`
+### `emit.options(EmitOpts) (Remit)`
 ```javascript
 // Delay a message by 10 seconds
 
@@ -272,7 +278,7 @@ add([5])
 })()
 ```
 
-## `emit.on(Event, Handler) (Remit)`
+### `emit.on(Event, Handler) (Remit)`
 ```javascript
 ;(async function () {
   const add = remit.request('add')
@@ -290,7 +296,7 @@ add([5])
 })()
 ```
 
-## `emit.ready() (Promise)`
+### `emit.ready() (Promise)`
  ```javascript
 ;(async function () {
   const add = remit.request('add')
@@ -310,27 +316,27 @@ add([5])
 })()
 ```
 
-# `endpoint(name [, ...Handler])`
+## `endpoint(name [, ...Handler])`
 
-## `endpoint(name, ...Handler) (Remit)`
+### `endpoint(name, ...Handler) (Remit)`
 
-## `endpoint(name).handler(...Handler) (Remit)`
+### `endpoint(name).handler(...Handler) (Remit)`
 
-## `endpoint.options(EndpointOpts) (Remit)`
+### `endpoint.options(EndpointOpts) (Remit)`
 
-## `endpoint.on(Event, Handler) (Remit)`
+### `endpoint.on(Event, Handler) (Remit)`
 
-## `endpoint.start() (Promise)`
+### `endpoint.start() (Promise)`
 
 
-# `listener(name [, ...Handler ])`
+## `listener(name [, ...Handler ])`
 
-## `listener(name, ...Handler) (Remit)`
+### `listener(name, ...Handler) (Remit)`
 
-## `listener(name).handler(...Handler) (Remit)`
+### `listener(name).handler(...Handler) (Remit)`
 
-## `listener.options(ListenerOpts) (Remit)`
+### `listener.options(ListenerOpts) (Remit)`
 
-## `listener.on(Event, Handler) (Remit)`
+### `listener.on(Event, Handler) (Remit)`
 
-## `listener.start() (Promise)`
+### `listener.start() (Promise)`
