@@ -27,14 +27,14 @@ npm install remit
 # API
 
 - [`Remit`](#)
-  - [`Types`](#Types)
-    - [`RequestOpts`](#RequestOpts)
-    - [`EmitOpts`](#EmitOpts)
-    - [`EndpointOpts`](#EndpointOpts)
-    - [`ListenerOpts`](#ListenerOpts)   
-    - [`Handler`](#Handler)
-    - [`Event`](#Event)
-    - [`Data`](#Data)
+  - [`Types`](#types)
+    - [`RequestOpts`](#requestopts)
+    - [`EmitOpts`](#emitopts)
+    - [`EndpointOpts`](#endpointopts)
+    - [`ListenerOpts`](#listeneropts)   
+    - [`Handler`](#handler)
+    - [`Event`](##event)
+    - [`Data`](#data)
 
   - [`request(name | RequestOpts [, Data ])`](#Request)
     - [`request(name | RequestOpts, Data) (Promise)`](#)
@@ -69,7 +69,7 @@ npm install remit
 ---
 
 # Types
-# RequestOpts
+## RequestOpts
 
 ```javascript
 RequestOpts {
@@ -80,7 +80,7 @@ RequestOpts {
 }
 ```
 
-# EmitOpts
+## EmitOpts
 ```javascript
 EmitOpts {
   event: string;
@@ -90,7 +90,7 @@ EmitOpts {
 }
 ```
 
-# EndpointOpts
+## EndpointOpts
 ```javascript
 EndpointOpts {
   event: string;
@@ -98,7 +98,7 @@ EndpointOpts {
 }
 
 ```
-# ListenerOpts
+## ListenerOpts
 ```javascript
 ListenerOpts {
   event: string;
@@ -106,12 +106,12 @@ ListenerOpts {
 }
 ```
 
-# Handler
+## Handler
 ```javascript
 function handler (Event) { ... }
 ```
 
-# Event
+## Event
 ```javascript
 Event {
   started?: date;
@@ -123,10 +123,61 @@ Event {
 }
 ```
 
-# Data
+## Data
 ```javascript
 Data array | arrayBuffer | buffer | string
 ```
-# Request
 
-# Emit
+## `request(name | RequestOpts [, Data ])`
+
+## `request(name | RequestOpts, Data) (Promise)`
+
+## `request(name | RequestOpts)(Data) (Promise)`
+
+## `request(name | RequestOpts).send(Data) (Promise)`
+
+## `request.options(opts) (Remit)`
+
+## `request.fallback(Data) (Remit)`
+
+## `request.on(Event, Handler) (Remit)`
+
+## `endpoint.ready() (Promise)`
+
+## `emit(name | EmitOpts [, Data ])`
+
+## `emit(name | EmitOpts, Data) (Promise)`
+
+## `emit(name | EmitOpts)(Data) (Promise)`
+
+## `emit(name | EmitOpts).send(Data) (Promise)`
+
+## `emit.options(EmitOpts) (Remit)`
+
+## `emit.on(Event, Handler) (Remit)`
+
+## `emit.ready() (Promise)`]
+ 
+## `endpoint(name [, ...Handler])`
+
+## `endpoint(name, ...Handler) (Remit)`
+
+## `endpoint(name).handler(...Handler) (Remit)`
+
+## `endpoint.options(EndpointOpts) (Remit)`
+
+## `endpoint.on(Event, Handler) (Remit)`
+
+## `endpoint.start() (Promise)`
+
+## `listener(name [, ...Handler ])`
+
+## `listener(name, ...Handler) (Remit)`
+
+## `listener(name).handler(...Handler) (Remit)`
+
+## `listener.options(ListenerOpts) (Remit)`
+
+## `listener.on(Event, Handler) (Remit)`
+
+## `listener.start() (Promise)`
