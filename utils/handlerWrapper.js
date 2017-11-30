@@ -2,6 +2,10 @@ function handlerWrapper (fn) {
   return (event) => {
     return new Promise((resolve, reject) => {
       try {
+        if (typeof fn !== 'function') {
+          return resolve(fn)
+        }
+
         const r = fn(event, (err, data) => {
           if (err) {
             reject(err)
