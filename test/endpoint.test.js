@@ -385,6 +385,26 @@ describe('Endpoint', function () {
       }
     })
 
+    it('should instantly return values in handlers', async function () {
+      await remit
+        .endpoint('handler-values')
+        .handler('handler-values-foobar')
+        .start()
+
+      const result = await remit.request('handler-values')()
+      expect(result).to.equal('handler-values-foobar')
+    })
+
+    it('should instantly return even falsey values in handlers', async function () {
+      await remit
+        .endpoint('handler-values-falsey')
+        .handler(0)
+        .start()
+
+      const result = await remit.request('handler-values-falsey')()
+      expect(result).to.equal(0)
+    })
+
     it('should pass the same `event` to every handler', async function () {
       const endpoint = await remit
         .endpoint('same-event')
