@@ -43,7 +43,7 @@ npm install remit
     - [`request.options(opts) (Remit)`](#requestoptionsopts-remit)
     - [`request.fallback(Data) (Remit)`](#requestfallbackdata-remit)
     - [`request.on(Event, Handler) (Remit)`](#requestonevent-handler-remit)
-    - [`endpoint.ready() (Promise)`](#endpointready-promise)
+    - [`request.ready() (Promise)`](#requestready-promise)
 
   - [`emit(name | EmitOpts [, Data ])`](#emitname--emitopts--data-)
     - [`emit(name | EmitOpts, Data) (Promise)`](#emitname--emitopts-data-promise)
@@ -128,37 +128,189 @@ Event {
 Data array | arrayBuffer | buffer | string
 ```
 
-## `request(name | RequestOpts [, Data ])`
+# `request(name | RequestOpts [, Data ])`
 
 ## `request(name | RequestOpts, Data) (Promise)`
+```javascript
+remit.request('add', [5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
 
 ## `request(name | RequestOpts)(Data) (Promise)`
+```javascript
+const add = remit.request('add')
+
+add[5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
 
 ## `request(name | RequestOpts).send(Data) (Promise)`
+```javascript
+const add = remit.request('add')
 
-## `request.options(opts) (Remit)`
+add
+  .send([5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
 
+## `request.options(RequestOpts) (Remit)`
+```javascript
+const add = remit.request('add')
+
+add
+  .options({ timeout: 1000 })
+  .send([5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
 ## `request.fallback(Data) (Remit)`
+```javascript
+const add = remit.request('add')
+
+add
+  .options({ timeout: 1000 })
+  .fallback(10)
+  .send([5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
 
 ## `request.on(Event, Handler) (Remit)`
+```javascript
+const add = remit.request('add')
 
-## `endpoint.ready() (Promise)`
+add.on('data', console.log) // will log twice (10 and 5)
 
-## `emit(name | EmitOpts [, Data ])`
+add([5, 5])
+add([5])
+```
+
+# `emit(name | EmitOpts [, Data ])`
 
 ## `emit(name | EmitOpts, Data) (Promise)`
+```javascript
+;(async function () {
+  const add = remit.request('add')
+  const added = sum => remit.emit('added', sum)
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  await added({
+    sum,
+    result
+  })
+})()
+```
 
 ## `emit(name | EmitOpts)(Data) (Promise)`
+```javascript
+;(async function () {
+  const add = remit.request('add')
+  const added = remit.emit('added')
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  await added({
+    sum,
+    result
+  })
+})()
+```
 
 ## `emit(name | EmitOpts).send(Data) (Promise)`
+```javascript
+;(async function () {
+  const add = remit.request('add')
+  const added = remit.emit('added')
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  await added
+    .send({
+      sum,
+      result
+    })
+})()
+```
 
 ## `emit.options(EmitOpts) (Remit)`
+```javascript
+// Delay a message by 10 seconds
+
+;(async function () {
+  const add = remit.request('add')
+  const added = remit.emit('added')
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  // With a delta in seconds
+  await added
+    .options({
+      delay: 10000
+    })
+    .send({
+      sum,
+      result
+    })
+
+  // With a future date
+  await added
+    .options({
+      schedule: Date.now() + 10000
+    })
+    .send({
+      sum,
+      result
+    })
+})()
+```
 
 ## `emit.on(Event, Handler) (Remit)`
+```javascript
+;(async function () {
+  const add = remit.request('add')
+  emit('added')
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  await added
+    .on('data', console.log)
+    .send({
+      sum,
+      result
+    })
+})()
+```
 
 ## `emit.ready() (Promise)`
- 
-## `endpoint(name [, ...Handler])`
+ ```javascript
+;(async function () {
+  const add = remit.request('add')
+  const added = remit.emit('added')
+
+  await add.ready()
+  await added.ready()
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  await added
+    .send({
+      sum,
+      result
+    })
+})()
+```
+
+# `endpoint(name [, ...Handler])`
 
 ## `endpoint(name, ...Handler) (Remit)`
 
@@ -170,7 +322,8 @@ Data array | arrayBuffer | buffer | string
 
 ## `endpoint.start() (Promise)`
 
-## `listener(name [, ...Handler ])`
+
+# `listener(name [, ...Handler ])`
 
 ## `listener(name, ...Handler) (Remit)`
 
