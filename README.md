@@ -1,446 +1,544 @@
-# remit
+# Remit
 
 [![Build Status](https://travis-ci.org/jpwilliams/remit.svg?branch=master)](https://travis-ci.org/jpwilliams/remit) [![Coverage Status](https://coveralls.io/repos/github/jpwilliams/remit/badge.svg?branch=master)](https://coveralls.io/github/jpwilliams/remit?branch=v2) [![npm downloads per month](https://img.shields.io/npm/dm/remit.svg)](https://www.npmjs.com/package/remit) [![npm version](https://img.shields.io/npm/v/remit.svg)](https://www.npmjs.com/package/remit)
 
-A wrapper for RabbitMQ for communication between microservices. No service discovery needed.
+# What is Remit?
 
-``` sh
+*A node.js service mesh for building event-driven microservices with batteries included.*
+
+It is built atop [RabbitMQ](http://www.rabbitmq.com) as an [ESB](https://en.wikipedia.org/wiki/Enterprise_service_bus)
+
+# Why Remit?
+- [x] Service discovery
+- [x] Request/Response RPC
+- [x] PubSub (aka send-and-forget) messaging
+- [ ] Tracing (_not yet_)
+
+---
+
+# Getting started
+```sh
+brew install rabbitmq
 npm install remit
 ```
 
-``` js
-remit
-  .endpoint('user')
-  .handler((event) => {
-    return {
-      name: 'Jack Williams',
-      email: 'jack@wildfire.gg'
-    }
-  })
-
-// another service/process
-const user = await remit.request('user')()
-console.log(user)
-
-/* {
-  name: 'Jack Williams',
-  email: 'jack@wildfire.gg'
-} */
-```
-
 ---
 
-## What's remit?
+# API
 
-A simple wrapper over [RabbitMQ](http://www.rabbitmq.com) to provide [RPC](https://en.wikipedia.org/wiki/Remote_procedure_call) and [ESB](https://en.wikipedia.org/wiki/Enterprise_service_bus)-style behaviour.
+- [`Remit`](#)
+  - [`Types`](#types)
+    - [`RequestOpts`](#requestopts)
+    - [`EmitOpts`](#emitopts)
+    - [`EndpointOpts`](#endpointopts)
+    - [`ListenerOpts`](#listeneropts)   
+    - [`Handler`](#handler)
+    - [`Event`](##event)
+    - [`Data`](#data)
+    - [`EventTarget`](#eventtarget)
 
-It supports **request/response** calls (e.g. requesting a user's profile), **emitting events** to the entire system (e.g. telling any services interested that a user has been created) and basic **scheduling** of messages (e.g. recalculating something every 5 minutes), all **load balanced** across grouped services and redundant; if a service dies, another will pick up the slack.
+  - [`API`](#api)
+    - [`request(name | RequestOpts [, Data ])`](requestname--requestopts-data)
+      - [`request(name | RequestOpts, Data) (Promise)`](#requestname--requestopts-data-promise)
+      - [`request(name | RequestOpts)(Data) (Promise)`](#requestname--requestoptsdata-promise)
+      - [`request(name | RequestOpts).send(Data) (Promise)`](#requestname--requestoptssenddata-promise)
+      - [`request.options(opts) (Remit)`](#requestoptionsopts-remit)
+      - [`request.fallback(Data) (Remit)`](#requestfallbackdata-remit)
+      - [`request.on(EventTarget, Handler) (Remit)`](#requestonevent-handler-remit)
+      - [`request.ready() (Promise)`](#requestready-promise)
 
-There are four types you can use with Remit.
+    - [`emit(name | EmitOpts [, Data ])`](#emitname--emitopts--data-)
+      - [`emit(name | EmitOpts, Data) (Promise)`](#emitname--emitopts-data-promise)
+      - [`emit(name | EmitOpts)(Data) (Promise)`](#emitname--emitoptsdata-promise)
+      - [`emit(name | EmitOpts).send(Data) (Promise)`](#emitname--emitoptssenddata-promise)
+      - [`emit.options(EmitOpts) (Remit)`](#emitoptionsemitopts-remit)
+      - [`emit.on(EventTarget, Handler) (Remit)`](#emitonevent-handler-remit)
+      - [`emit.ready() (Promise)`](#emitready-promise)
+  
+    - [`endpoint(name [, ...Handler])`](#endpointname--handler)
+      - [`endpoint(name, ...Handler) (Remit)`](#endpointname-handler-remit)
+      - [`endpoint(name).handler(...Handler) (Remit)`](#endpointnamehandlerhandler-remit)
+      - [`endpoint.options(EndpointOpts) (Remit)`](#endpointoptionsendpointopts-remit)
+      - [`endpoint.on(EventTarget, Handler) (Remit)`](#endpointonevent-handler-remit)
+      - [`endpoint.start() (Promise)`](#endpointstart-promise)
 
-* [request](#), which fetches data from an [endpoint](#)
-* [emit](#), which emits data to [listen](#)ers
-
-Endpoints and listeners are grouped by "Service Name" specified as `name` or the environment variable `REMIT_NAME` when creating a Remit instance. This grouping means only a single consumer in that group will receive a message. This is used for scaling services: when creating multiple instances of a service, make sure they all have the same name.
-
+    - [`listener(name [, ...Handler ])`](#listenername--handler-)
+      - [`listener(name, ...Handler) (Remit)`](#listenername-handler-remit)
+      - [`listener(name).handler(...Handler) (Remit)`](#listenernamehandlerhandler-remit)
+      - [`listener.options(ListenerOpts) (Remit)`](#listeneroptionslisteneropts-remit)
+      - [`listener.on(EventTarget, Handler) (Remit)`](#listeneronevent-handler-remit)
+      - [`listener.start() (Promise)`](#listenerstart-promise)
 ---
 
-## Contents
-
-* [What's remit?](#)
-* [Recommendations](#)
-* [API/Usage](#)
-* [Events](#)
-* [Handlers](#)
-
----
-
-## API/Usage
-
-* [request(event)](#)
-  * [request.on(eventName, listener)](#)
-  * [request.fallback(data)](#)
-  * [request.options(options)](#)
-  * [request.ready()](#)
-  * [request.send([data[, options]]) OR request([data[, options]])](#)
-* [endpoint(event[, ...handlers])](#)
-  * [endpoint.handler(...handlers)](#)
-  * [endpoint.on(eventName, listener)](#)
-  * [endpoint.options(options)](#)
-  * [endpoint.start()](#)
-* [emit(event)](#)
-  * [emit.on(eventName, listener)](#)
-  * [emit.options(options)](#)
-  * [emit.ready()](#)
-  * [emit.send([data[, options]]) OR emit([data[, options]])](#)
-* [listen(event[, ...handlers])](#)
-  * [listen.handler(...handlers)](#)
-  * [listen.on(eventName, listener)](#)
-  * [listen.options(options)](#)
-  * [listen.start()](#)
-
----
-
-#### `request(event)`
-
-* `event` &lt;string&gt; | &lt;Object&gt;
-
-Create a new request for data from an [endpoint](#) by calling the event dictated by `event`. If an object is passed, `event` is required. See [`request.options`](#) for available options.
-
-``` js
-remit.request('foo.bar')
-```
-
-`timeout` and `priority` are explained and can be changed at any stage using [`request.options()`](#).
-
-The request is sent by running the returned function (synonymous with calling `.send()`), passing the data you wish the make the request with.
-
-For example, to retrieve a user from the `'user.profile'` endpoint using an ID:
-
-``` js
-const getUserProfile = remit.request('user.profile')
-const user = await getUserProfile(123)
-console.log(user)
-// prints the user's data
-```
-
-Returns a new request.
-
-#### `request.on(eventName, listener)`
-
-* `eventName` &lt;any&gt;
-* `listener` &lt;Function&gt;
-
-Subscribe to this request's dumb EventEmitter. For more information on the events emitted, see the [Events](#) section.
-
-Returns a reference to the `request`, so that calls can be chained.
-
-#### `request.fallback(data)`
-
-* `data` &lt;any&gt;
-
-Specifies data to be returned if a request fails for any reason. Can be used to gracefully handle failing calls across multiple requests. When a fallback is set, any request that fails will instead resolve successfully with the data passed to this function.
-
-``` js
-const request = remit
-  .request('user.list')
-  .fallback([])
-```
-
-The error is still sent over the request's EventEmitter, so listening to `'error'` lets you handle the error however you wish.
-
-You can change the fallback at any point in a request's life and unset it by explicitly passing `undefined`.
-
-Returns a reference to the `request`, so that calls can be chained.
-
-#### `request.options(options)`
-
-* `options` &lt;Object&gt;
-  * `event` &lt;string&gt; **Required**
-  * `timeout` &lt;integer&gt; **Default:** `30000`
-  * `priority` &lt;integer&gt; **Default:** `0`
-
-Set various options for the request. Can be done at any point in a request's life but will not affect timeouts in which requests have already been sent.
-
-``` js
-const request = remit
-  .request('foo.bar')
-  .options({
-    timeout: 5000
-  })
-```
-
-Settings `timeout` to `0` will result in there being no timeout. Otherwise it is the amount of time in milliseconds to wait before declaring the request "timed out".
-
-`priority` can be an integer between `0` and `10`. Higher priority requests will go to the front of queues over lower priority requests.
-
-Returns a reference to the `request`, so that calls can be chained.
-
-#### `request.ready()`
-
-Returns a promise which resolves when the request is ready to make calls.
-
-``` js
-const request = await remit
-  .request('foo.bar')
-  .ready()
-```
-
-Any calls made before this promise is resolved will be automatically queued until it is.
-
-Returns a reference to the `request`, so that calls can be chained.
-
-#### `request.send([data[, options]])`
-
-_Synonymous with `request([data[, options]])`_
-
-* `data` &lt;any&gt; **Default:** `null`
-* `options` &lt;Object&gt;
-
-Sends a request. `data` can be anything that plays nicely with [JSON.stringify](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify). If `data` is not defined, `null` is sent (`undefined` cannot be parsed into JSON).
-
-``` js
-const getUser = remit.request('user.getProfile')
-
-// either of these perform the same action
-const user = await getUser(123)
-const user = await getUser.send(123)
-```
-
-`options` can contain anything provided in [`request.options`](#), but the options provided will only apply to that single request.
-
-Returns a promise that resolves with data if the request was successful or rejects with an error if not. Always resolves if a [fallback](#) is set.
-
----
-
-#### `endpoint(event[, ...handlers])`
-
-* `event` &lt;string&gt; | &lt;Object&gt;
-* `...handlers` &lt;Function&gt;
-
-Creates an endpoint that replies to [`request`](#)s.
-
-`event` is the code requests will use to call the endpoint. If an object is passed, `event` is required. For available options, see [`endpoint.options`](#).
-
-``` js
-const endpoint = await remit
-  .endpoint('foo.bar', console.log)
-  .start()
-```
-
-[`start()`](#) must be called on an endpoint to "boot it up" ready to receive requests. An endpoint that's started without a `handler` (a function or series of functions that returns data to send back to a request) will throw. You can set handlers here or using [`endpoint.handler`](#). To learn more about handlers, check the [Handlers](#) section.
-
-Returns a new endpoint.
-
-#### `endpoint.handler(...handlers)`
-
-* `...handlers` &lt;Function&gt;
-
-Set the handler(s) for this endpoint. Only one series of handlers can be active at a time, though the active handlers can be changed using this call at any time.
-
-``` js
-const endpoint = remit.endpoint('foo.bar')
-endpoint.handler(logRequest, sendFoo)
-endpoint.start()
-```
-
-For more information on handlers, see the [Handlers](#) section.
-
-Returns a reference to the `endpoint`, so that calls can be chained.
-
-#### `endpoint.on(eventName, listener)`
-
-* `eventName` &lt;any&gt;
-* `listener` &lt;Function&gt;
-
-Subscribe to this endpoint's dumb EventEmitter. For more information on the events emitted, see the [Events](#) section.
-
-Returns a reference to the `endpoint`, so that calls can be chained.
-
-#### `endpoint.options(options)`
-
-#### `endpoint.start()`
-
-----
-
-#### `emit.on(eventName, listener)`
-
-* `eventName` &lt;any&gt;
-* `listener` &lt;Function&gt;
-
-Subscribe to this emitter's dumb EventEmitter. For more information on the events emitted, see the [Events](#) section.
-
-Returns a reference to the `emit`, so that calls can be chained.
-
-#### `emit.options(options)`
-
-#### `emit.ready()`
-
-#### `emit.send([data[, options]])`
-
----
-
-#### `listen.handler(...handlers)`
-
-#### `listen.on(eventName, listener)`
-
-* `eventName` &lt;any&gt;
-* `listener` &lt;Function&gt;
-
-Subscribe to this listener's dumb EventEmitter. For more information on the events emitted, see the [Events](#) section.
-
-Returns a reference to the `listen`, so that calls can be chained.
-
-#### `listen.options(options)`
-
-#### `listen.start()`
-
-## Events
-
-[`request`](#), [`endpoint`](#), [`emit`](#) and [`listen`](#) all export EventEmitters that emit events about their incoming/outgoing messages.
-
-All of the events can be listened to by using the `.on()` function, providing an `eventName` and a `listener` function, like so:
-
-``` js
-const request = remit.request('foo.bar')
-const endpoint = remit.endpoint('foo.bar')
-const emit = remit.emit('foo.bar')
-const listen = remit.listen('foo.bar')
-
-request.on('...', ...)
-endpoint.on('...', ...)
-emit.on('...', ...)
-listen.on('...', ...)
-```
-
-Events can also be listened to _globally_, by adding a listener directly to the type. This listener will receive events for all instances of that type. This makes it easier to introduce centralised logging to remit's services.
-
-``` js
-remit.request.on('...', ...)
-remit.endpoint.on('...', ...)
-remit.emit.on('...', ...)
-remit.listen.on('...', ...)
-```
-
-The following events can be listened to:
-
-| Event | Description | Returns | request | endpoint | emit | listen |
-| ----- | ----------- | ------- |  :---:  |   :---:  | :---: | :---: |
-| `data` | Data was received | Raw data | ✅ | ✅ | ❌ | ✅ |
-| `error` | An error occured or was passed back from an endpoint | Error | ✅ | ✅ | ✅ | ✅ |
-| `sent` | Data was sent | The event that was sent | ✅ | ✅ | ✅ | ❌ |
-| `success` | The action was successful | The successful result/data | ✅ | ✅ | ✅ | ✅ |
-| `timeout` | The request timed out | A [timeout object](#) | ✅ | ❌ | ❌ | ❌ |
-
-## Handlers
-
-[Endpoints](#) and [listeners](#) use handlers to reply to or, uh, handle incoming messages. In both cases, these are functions that can be passed when creating the listener or added/changed real-time by using the `.handler()` method.
-
-All handlers are passed two items: `event` and `callback`. If `callback` is mapped, you will need to call it to indicate success/failure (see [Handling completion](#) below). If you do not map a callback, you can reply synchronously or by returning a Promise.
-
-Handlers are used for determining when a message has been successfully dealt with. Internally, Remit uses this to ascertain when to draw more messages in from the queue and, in the case of listeners, when to remove the message from the server.
-
-RabbitMQ gives an at-least-once delivery guarantee, meaning that, ideally, listeners are idempotent. If a service dies before it has successfully returned from a handler, all messages it was processing will be passed back to the server and distributed to another service (or the same service once it reboots).
-
-#### Simple returns
-
-Here, we create a simple endpoint that returns `{"foo": "bar"}` whenever called:
-
-``` js
-const endpoint = await remit
-  .endpoint('foo.bar', () => {
-    return {foo: 'bar'}
-  })
-  .start()
-```
-
-#### Incoming data
-
-We can also parse incoming data and gather information on the request by using the given `event` object.
-
-``` js
-const endpoint = await remit
-  .endpoint('foo.bar', (event) => {
-    console.log(event)
-  })
-  .start()
-```
-
-#### Event object
-
-When called, the above will log out the event it's been passed. Here's an example of an event object:
-
-``` js
-{
-  // the time the message was taken from the server
-  started: <Date>,
-
-  // a unique ID for the message
-  // (useful for idempotency purposes)
-  eventId: '01BQ5MRBJJ2AK9N23BW4S84WN1',
-
-  // the eventName used to call this endpoint/listener
-  // (useful when using wildcard listeners)
-  eventType: 'foo.bar',
-
-  // the name of the service that called/emitted this
-  resource: 'service-user',
-
-  // the data sent with the request
-  data: {userId: 123},
-
-  // the time the message was created
-  timestamp: <Date>
+# Types
+## `RequestOpts`
+
+```javascript
+RequestOpts {
+  event: string;
+  queue: string;
+  timeout=3000?: number;
+  priority=0?: number;
 }
 ```
 
-#### Handling completion
-
-Handlers provide you with three different ways of showing completion: Promises, callbacks or a synchronous call. To decide what the handler should treat as a successful result, remit follows the following pattern:
-
-```
-if handler does not map second (callback) property:
-├── if handler returns a promise:
-│   └── Watch resolution/rejection of result
-│   else:
-│   └── Return synchronous result
-else:
-└── Wait for callback to be called
+## `EmitOpts`
+```javascript
+EmitOpts {
+  event: string;
+  schedule?: number;
+  delay?: number;
+  priority=0?: number;
+}
 ```
 
-In any case, if an exception is thrown or an error is passed as the first value to the callback, then the error is passed back to the requester (if an endpoint) or the message sent to a dead-letter queue (if a listener).
+## `EndpointOpts`
+```javascript
+EndpointOpts {
+  event: string;
+  queue: string;
+}
 
-#### Middleware
+```
+## `ListenerOpts`
+```javascript
+ListenerOpts {
+  event: string;
+  queue: string;
+}
+```
 
-You can provide multiple handlers in a sequence to act as middleware, similar to that of Express's. Every handler in the line is passed the same `event` object, so to pass data between the handlers, mutate that.
+## `Handler`
+A handle can be passed as a promise, calllback function or just a plain value; for example:
+```javascript
+  // If you want to 'resolve' and yield a value
+  const resolveWithPromise = async event => event.data.reduced((a, b) => a + b, 0)
+  const resolveWithCallback = (event, done) => done(null, event.data.reduced((a, b) => a + b, 0))
+  const resolveWithPlainValue = 10
 
-A common use case for middleware is validation. Here, a middleware handler adds a property to incoming data before continuing:
+  // If you want to 'reject' and yield a error
+  const rejectWithPromise = async event => throw new Error('whoops')
+  const rejectWithCallback = (event, done) => done(new Error('whoops'))
+```
 
-``` js
-const endpoint = await remit
-  .endpoint('foo.bar')
-  .handler((event) => {
-    event.foo = 'bar'
-  }, (event) => {
-    console.log(event)
-    // event will contain `foo: 'bar'`
+## `Event`
+```javascript
+Event {
+  started?: date;
+  eventId?: string;
+  scheduled? string;
+  delay?: string;
+  resourceTrace?: string;
+  data?: Data
+}
+```
 
-    return true
+## `Data`
+```javascript
+Data array | arrayBuffer | buffer | string
+```
+
+## `EventTarget`
+| Event | Description | Value | Request | Endpoint | Emit | Listen |
+| ----- | ----------- | ------- |  :---:  |   :---:  | :---: | :---: |
+| `data` | received data | Data | ✅ | ✅ | ❌ | ✅ |
+| `sent` | dispatched event | Event | ✅ | ✅ | ✅ | ❌ |
+| `error` | event failed | Error | ✅ | ✅ | ✅ | ✅ |
+| `timeout` | event failed to yield within timeout SLA | Error | ✅ | ❌ | ❌ | ❌ |
+| `success` | event successful yielded | Data | ✅ | ✅ | ✅ | ✅ |
+
+# `API`
+## `request(name | RequestOpts [, Data ])`
+
+### `request(name | RequestOpts, Data) (Promise)`
+```javascript
+remit.request('add', [5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
+
+### `request(name | RequestOpts)(Data) (Promise)`
+```javascript
+const add = remit.request('add')
+
+add[5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
+
+### `request(name | RequestOpts).send(Data) (Promise)`
+```javascript
+const add = remit.request('add')
+
+add
+  .send([5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
+
+### `request.options(RequestOpts) (Remit)`
+```javascript
+const add = remit.request('add')
+
+add
+  .options({ timeout: 1000 })
+  .send([5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
+### `request.fallback(Data) (Remit)`
+```javascript
+const add = remit.request('add')
+
+add
+  .options({ timeout: 1000 })
+  .fallback(10)
+  .send([5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
+
+### `request.on(EventTarget, Handler) (Remit)`
+```javascript
+const add = remit.request('add')
+
+add.on('data', console.log) // will log twice (10 and 5)
+
+add([5, 5])
+add([5])
+```
+
+## `emit(name | EmitOpts [, Data ])`
+
+### `emit(name | EmitOpts, Data) (Promise)`
+```javascript
+;(async function () {
+  const add = remit.request('add')
+  const added = sum => remit.emit('added', sum)
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  await added({
+    sum,
+    result
   })
-  .start()
+})()
 ```
 
-When using middleware, it's important to know how to break the chain if you need to. If anything other than `undefined` is returned in any handler (middleware or otherwise via a Promise/callback/sync call), the chain will break and that data will be returned to the requester.
+### `emit(name | EmitOpts)(Data) (Promise)`
+```javascript
+;(async function () {
+  const add = remit.request('add')
+  const added = remit.emit('added')
 
-If an exception is thrown at any point, the chain will also break and the error will be returned to the requester.
+  const sum = [5, 5]
+  const result = await add(sum)
 
-This means you can fall out of chains early. Let's say we want to fake an empty response for user #21:
+  await added({
+    sum,
+    result
+  })
+})()
+```
 
-``` js
-const endpoint = await remit
-  .endpoint('foo.bar')
-  .handler((event) => {
-    if (event.data.userId === 21) {
-      return []
+### `emit(name | EmitOpts).send(Data) (Promise)`
+```javascript
+;(async function () {
+  const add = remit.request('add')
+  const added = remit.emit('added')
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  await added
+    .send({
+      sum,
+      result
+    })
+})()
+```
+
+### `emit.options(EmitOpts) (Remit)`
+```javascript
+// Delay a message by 10 seconds
+
+;(async function () {
+  const add = remit.request('add')
+  const added = remit.emit('added')
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  // With a delta in seconds
+  await added
+    .options({
+      delay: 10000
+    })
+    .send({
+      sum,
+      result
+    })
+
+  // With a future date
+  await added
+    .options({
+      schedule: Date.now() + 10000
+    })
+    .send({
+      sum,
+      result
+    })
+})()
+```
+
+### `emit.on(EventTarget, Handler) (Remit)`
+```javascript
+;(async function () {
+  const add = remit.request('add')
+  emit('added')
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  await added
+    .on('data', console.log)
+    .send({
+      sum,
+      result
+    })
+})()
+```
+
+### `emit.ready() (Promise)`
+```javascript
+;(async function () {
+  const add = remit.request('add')
+  const added = remit.emit('added')
+
+  await add.ready()
+  await added.ready()
+
+  const sum = [5, 5]
+  const result = await add(sum)
+
+  await added
+    .send({
+      sum,
+      result
+    })
+})()
+```
+
+## `endpoint(name [, ...Handler])`
+You can provide multiple handlers in a sequence to act as middleware, similar to that of Express's. Every handler in the line is passed the same event object, so to pass data between the handlers, mutate that.
+
+### `endpoint(name, ...Handler) (Remit)`
+```javascript
+;(async function () {
+  remit
+    .endpoint('add', parse, add)
+    .start()
+
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
     }
-  }, (event) => {
-    return calculateUserList()
-  })
-  .start()
+
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
 ```
+### `endpoint(name).handler(...Handler) (Remit)`
+```javascript
+;(async function () {
 
-Or perhaps exit if a call is done with no authorisation token:
+  const remit
+    .endpoint('add')
+    .handler(
+      parse,
+      add
+    )
+    .start()
 
-``` js
-const endpoint = await remit
-  .endpoint('foo.bar')
-  .handler(async (event) => {
-    if (!event.data.authToken) {
-      throw new Error('No authorisation token given')
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
     }
 
-    event.data.decodedToken = await decodeAuthToken(event.data.authToken)
-  }, (event) => {
-    return performGuardedCall()
-  })
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
+
+### `endpoint.options(EndpointOpts) (Remit)`
+```javascript
+;(async function () {
+
+  const remit
+    .endpoint('add')
+    .options({
+      queue: 'custom-queue-name' // you probably don't want to specify the queue name yourself - but you could.
+    })
+    .handler(
+      parse,
+      add
+    )
+    .start()
+
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
+    }
+
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
+
+### `endpoint.on(EventTarget, Handler) (Remit)`
+```javascript
+  const remit
+    .endpoint('add')
+    .on('data', console.log)
+    .handler(
+      parse,
+      add
+    )
+    .start()
+
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
+    }
+
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
+
+### `endpoint.start() (Promise)`
+start() must be called on an endpoint before it will receive requests. An endpoint that's started without a handler (a function or series of functions that returns data to send back to a request) will throw. You can set handlers here or using endpoint.handler.
+
+```javascript
+  const remit
+    .endpoint('add')
+    .on('data', console.log)
+    .handler(
+      parse,
+      add
+    )
+    .start()
+    .then(() => console.log('endpoint has started'))
+
+  async function parse (event) {
+    if (!Array.isArray(event.data)) {
+      throw 'needs an array of values to sum'
+    }
+
+    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    return event
+  }
+
+  async function add (event) {
+   return event.data.reduce((a, b) => a + b, 0)
+  }
+})()
+```
+
+## `listener(name [, ...Handler])`
+You can provide multiple handlers in a sequence to act as middleware, similar to that of Express's. Every handler in the line is passed the same event object, so to pass data between the handlers, mutate that.
+
+### `listener(name, ...Handler) (Remit)`
+```javascript
+;(async function () {
+  remit
+    .listener('added', added)
+    .start()
+
+  async function added (event) {
+    console.log('added', event.data)
+  }
+})()
+```
+
+### `listener(name).handler(...Handler) (Remit)`
+```javascript
+;(async function () {
+
+  const remit
+    .listener('added')
+    .handler(added)
+    .start()
+
+  async function added (event) {
+    console.log('added', event.data)
+  }
+})()
+```
+
+### `listener.options(listenerOpts) (Remit)`
+```javascript
+;(async function () {
+
+  const remit
+    .listener('added')
+    .options({
+      queue: 'custom-queue-name' // you probably don't want to specify the queue name yourself - but you could.
+    })
+    .handler(added)
+    .start()
+
+  async function added (event) {
+    console.log('added', event.data)
+  }
+})()
+```
+
+### `listener.on(EventTarget, Handler) (Remit)`
+```javascript
+  const remit
+    .listener('added')
+    .on('data', console.log)
+    .handler(added)
+
+  async function added (event) {
+    console.log('added', event.data)
+  }
+})()
+```
+
+### `listener.start() (Promise)`
+start() must be called on an endpoint before it will receive requests. An endpoint that's started without a handler (a function or series of functions that returns data to send back to a request) will throw. You can set handlers here or using endpoint.handler.
+
+```javascript
+  const remit
+    .listener('added')
+    .on('data', console.log)
+    .handler(added)
+
+  async function added (event) {
+    console.log('added', event.data)
+  }
+})()
 ```
