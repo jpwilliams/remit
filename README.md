@@ -18,8 +18,6 @@ It is built atop [RabbitMQ](http://www.rabbitmq.com) as an [ESB](https://en.wiki
 
 ![alt text](consumer-groups.png "Consumer groups")
 
-A string that uniquely identifies the group of consumer processes to which this consumer belongs. By setting the same group id multiple processes indicate that they are all part of the same consumer group.
-
 ---
 
 # Getting started
@@ -80,10 +78,12 @@ npm install remit
 # Types
 ## `ConnectionOpts`
 
+`name` is string that uniquely identifies the group of consumer processes to which this consumer belongs. By setting the same group id multiple processes indicate that they are all part of the same consumer group.
+
 ```javascript
 ConnectionOpts {
   exchange='remit'?: string;
-  name=process.env.REMIT_NAME?: string; // name defines the consumer group
+  name=process.env.REMIT_NAME?: string;
   url=process.env.REMIT_URL | amqp://localhost?: string;
   priority=0?: number;
 }
