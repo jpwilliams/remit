@@ -78,7 +78,7 @@ npm install remit
 # Types
 ## `ConnectionOpts`
 
-`name` is string that uniquely identifies the group of consumer processes to which this consumer belongs. By setting the same group id multiple processes indicate that they are all part of the same consumer group.
+`name` is string that uniquely identifies the group of consumer processes to which this consumer belongs. By setting the same `name` multiple processes indicate that they are all part of the same consumer group.
 
 ```javascript
 ConnectionOpts {
