@@ -10,6 +10,8 @@ It is built atop [RabbitMQ](http://www.rabbitmq.com) as an [ESB](https://en.wiki
 
 # Why Remit?
 - [x] Service discovery
+- [x] Consumer groups
+- [x] Middleware
 - [x] Request/Response RPC
 - [x] PubSub (aka send-and-forget) messaging
 - [ ] Tracing (_not yet_)
@@ -109,7 +111,14 @@ ListenerOpts {
 ```
 
 ## `Handler`
-A handle can be passed as a promise, calllback function or just a plain value; for example:
+A set of middleware functions that have access to the event object, they can be a promise, calllback function or just a plain value
+
+Middleware functions can perform the following tasks:
+- Execute any code.
+- Make changes to the event object and its data.
+- End the request-response cycle.
+- Call the next middleware function in the stack.
+
 ```javascript
   // If you want to 'resolve' and yield a value
   const resolveWithPromise = async event => event.data.reduced((a, b) => a + b, 0)
@@ -134,9 +143,15 @@ Event {
 ```
 
 ## `Data`
-```javascript
-Data array | arrayBuffer | buffer | string
-```
+The data will be stringified with `JSON.stringify` which converts a value to JSON notation representing it:
+
+-  Boolean, Number, and String objects are converted to the corresponding primitive values during stringification, in accord with the traditional conversion semantics.
+
+- If undefined, a function, or a symbol is encountered during conversion it is either omitted (when it is found in an object) or censored to null (when it is found in an array). JSON.stringify can also just return undefined when passing in "pure" values like JSON.stringify(function(){}) or JSON.stringify(undefined).
+
+- All symbol-keyed properties will be completely ignored, even when using the replacer function.
+Non-enumerable properties will be ignored
+
 
 ## `EventTarget`
 | Event | Description | Value | Request | Endpoint | Emit | Listen |
@@ -181,17 +196,32 @@ add
 const add = remit.request('add')
 
 add
-  .options({ timeout: 1000 })
+  .options({ timeout: 1000 }) // delay the message from being consumed for one second.
   .send([5, 5])
   .then(console.log)
   .catch(console.error)
+
+// Or you could set options earlier on
+const add = remit.request({
+  event: 'add',
+  timeout: 1000 // delay the message from being consumed for one second.
+})
+
+add
+  .send([5, 5])
+  .then(console.log)
+  .catch(console.error)
+
 ```
+
 ### `request.fallback(Data) (Remit)`
+Specifies data to be returned if a request fails for any reason. Can be used to gracefully handle failure cases.
+
 ```javascript
 const add = remit.request('add')
 
 add
-  .options({ timeout: 1000 })
+  .options({ timeout: 1000 }) // delay the message from being consumed for one second.
   .fallback(10)
   .send([5, 5])
   .then(console.log)
@@ -260,36 +290,42 @@ add([5])
 ```
 
 ### `emit.options(EmitOpts) (Remit)`
+In this example we will show how you can send `schedule` or `delay` options which will make delay consumer consumption of the message
+
 ```javascript
 // Delay a message by 10 seconds
 
 ;(async function () {
   const add = remit.request('add')
-  const added = remit.emit('added')
 
   const sum = [5, 5]
   const result = await add(sum)
 
-  // With a delta in seconds
-  await added
+  await remit.request('add')(sum)
+
+  await remit.emit('added')
     .options({
-      delay: 10000
+      // You will send delay or schedule; here is an example where they are equivical.
+      delay: 1000, // delay the message from being consumed for one second.
+      schedule: new Date(Date.now() + 1000) // delay the message from being consumed for one second.
     })
     .send({
       sum,
       result
     })
 
-  // With a future date
-  await added
-    .options({
-      schedule: Date.now() + 10000
+
+  // Or you could set options earlier on
+  await remit.emit({
+      event: 'added',
+      // You will send delay or schedule; here is an example where they are equivical.
+      delay: 1000, // delay the message from being consumed for one second.
+      schedule: new Date(Date.now() + 1000) // delay the message from being consumed for one second.
     })
     .send({
       sum,
       result
     })
-})()
 ```
 
 ### `emit.on(EventTarget, Handler) (Remit)`
@@ -341,11 +377,13 @@ You can provide multiple handlers in a sequence to act as middleware, similar to
     .start()
 
   async function parse (event) {
+    // if data is not an array we will reject the request and the middleware chain will be broken
     if (!Array.isArray(event.data)) {
       throw 'needs an array of values to sum'
     }
 
-    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    // event is passed through middleware, so we can mutate it before it's sent to the next middleware
+    event.data = event.data.map(parseInt)
     return event
   }
 
@@ -354,6 +392,7 @@ You can provide multiple handlers in a sequence to act as middleware, similar to
   }
 })()
 ```
+
 ### `endpoint(name).handler(...Handler) (Remit)`
 ```javascript
 ;(async function () {
@@ -367,11 +406,13 @@ You can provide multiple handlers in a sequence to act as middleware, similar to
     .start()
 
   async function parse (event) {
+    // if data is not an array we will reject the request and the middleware chain will be broken
     if (!Array.isArray(event.data)) {
       throw 'needs an array of values to sum'
     }
 
-    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    // event is passed through middleware, so we can mutate it before it's sent to the next middleware
+    event.data = event.data.map(parseInt)
     return event
   }
 
@@ -397,11 +438,13 @@ You can provide multiple handlers in a sequence to act as middleware, similar to
     .start()
 
   async function parse (event) {
+    // if data is not an array we will reject the request and the middleware chain will be broken
     if (!Array.isArray(event.data)) {
       throw 'needs an array of values to sum'
     }
 
-    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    // event is passed through middleware, so we can mutate it before it's sent to the next middleware
+    event.data = event.data.map(parseInt)
     return event
   }
 
@@ -423,11 +466,13 @@ You can provide multiple handlers in a sequence to act as middleware, similar to
     .start()
 
   async function parse (event) {
+    // if data is not an array we will reject the request and the middleware chain will be broken
     if (!Array.isArray(event.data)) {
       throw 'needs an array of values to sum'
     }
 
-    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
+    // event is passed through middleware, so we can mutate it before it's sent to the next middleware
+    event.data = event.data.map(parseInt)
     return event
   }
 
@@ -438,33 +483,7 @@ You can provide multiple handlers in a sequence to act as middleware, similar to
 ```
 
 ### `endpoint.start() (Promise)`
-start() must be called on an endpoint before it will receive requests. An endpoint that's started without a handler (a function or series of functions that returns data to send back to a request) will throw. You can set handlers here or using endpoint.handler.
-
-```javascript
-  const remit
-    .endpoint('add')
-    .on('data', console.log)
-    .handler(
-      parse,
-      add
-    )
-    .start()
-    .then(() => console.log('endpoint has started'))
-
-  async function parse (event) {
-    if (!Array.isArray(event.data)) {
-      throw 'needs an array of values to sum'
-    }
-
-    event.data = event.data.map(parseInt) // make sure we're adding ints by mutating event
-    return event
-  }
-
-  async function add (event) {
-   return event.data.reduce((a, b) => a + b, 0)
-  }
-})()
-```
+start() must be called on an endpoint before it will receive requests. An endpoint that's started without a handler (a function or series of functions that returns data to send back to a request) will throw.
 
 ## `listener(name [, ...Handler])`
 You can provide multiple handlers in a sequence to act as middleware, similar to that of Express's. Every handler in the line is passed the same event object, so to pass data between the handlers, mutate that.
@@ -529,16 +548,4 @@ You can provide multiple handlers in a sequence to act as middleware, similar to
 ```
 
 ### `listener.start() (Promise)`
-start() must be called on an endpoint before it will receive requests. An endpoint that's started without a handler (a function or series of functions that returns data to send back to a request) will throw. You can set handlers here or using endpoint.handler.
-
-```javascript
-  const remit
-    .listener('added')
-    .on('data', console.log)
-    .handler(added)
-
-  async function added (event) {
-    console.log('added', event.data)
-  }
-})()
-```
+start() must be called on an endpoint before it will receive requests. An endpoint that's started without a handler (a function or series of functions that returns data to send back to a request) will throw.
