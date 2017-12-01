@@ -16,6 +16,8 @@ It is built atop [RabbitMQ](http://www.rabbitmq.com) as an [ESB](https://en.wiki
 - [x] PubSub (aka send-and-forget) messaging
 - [ ] Tracing (_not yet_)
 
+![alt text](consumer-groups.png "Consumer groups")
+
 ---
 
 # Getting started
