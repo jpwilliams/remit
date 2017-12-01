@@ -18,6 +18,8 @@ It is built atop [RabbitMQ](http://www.rabbitmq.com) as an [ESB](https://en.wiki
 
 ![alt text](consumer-groups.png "Consumer groups")
 
+A string that uniquely identifies the group of consumer processes to which this consumer belongs. By setting the same group id multiple processes indicate that they are all part of the same consumer group.
+
 ---
 
 # Getting started
@@ -32,6 +34,7 @@ npm install remit
 
 - [`Remit`](#)
   - [`Types`](#types)
+    - [`ConnectionOpts`](#connectionopts)
     - [`RequestOpts`](#requestopts)
     - [`EmitOpts`](#emitopts)
     - [`EndpointOpts`](#endpointopts)
@@ -41,8 +44,8 @@ npm install remit
     - [`Data`](#data)
     - [`EventTarget`](#eventtarget)
 
-  - [`API`](#api)
-    - [`request(name | RequestOpts [, Data ])`](requestname--requestopts-data)
+  - [`Remit([ConnectionOpts])`](#requestconnectionopts)
+    - [`request(name | RequestOpts [, Data ])`](#requestname--requestopts-data)
       - [`request(name | RequestOpts, Data) (Promise)`](#requestname--requestopts-data-promise)
       - [`request(name | RequestOpts)(Data) (Promise)`](#requestname--requestoptsdata-promise)
       - [`request(name | RequestOpts).send(Data) (Promise)`](#requestname--requestoptssenddata-promise)
@@ -75,6 +78,17 @@ npm install remit
 ---
 
 # Types
+## `ConnectionOpts`
+
+```javascript
+ConnectionOpts {
+  exchange='remit'?: string;
+  name=process.env.REMIT_NAME?: string; // name defines the consumer group
+  url=process.env.REMIT_URL | amqp://localhost?: string;
+  priority=0?: number;
+}
+```
+
 ## `RequestOpts`
 
 ```javascript
@@ -165,6 +179,19 @@ Non-enumerable properties will be ignored
 | `success` | event successful yielded | Data | ✅ | ✅ | ✅ | ✅ |
 
 # `API`
+## `Remit([ConnectionOpts])`
+```javascript
+const remit = require('remit')({
+  name: 'addingService' // addingService will be our consumer group
+})
+
+// Since we use a lazy connection, you can start using remit right away
+remit.request('add')
+  .send([5, 5])
+  .then(console.log)
+  .catch(console.error)
+```
+
 ## `request(name | RequestOpts [, Data ])`
 
 ### `request(name | RequestOpts, Data) (Promise)`
