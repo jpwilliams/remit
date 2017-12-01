@@ -219,6 +219,10 @@ add
 ### `request.fallback(Data) (Remit)`
 Specifies data to be returned if a request fails for any reason. Can be used to gracefully handle failure cases.
 
+The error is still sent over the request's EventEmitter, so listening to 'error' lets you handle the error however you wish.
+
+You can change the fallback at any point in a request's life and unset it by explicitly passing undefined.
+
 ```javascript
 const add = remit.request('add')
 
