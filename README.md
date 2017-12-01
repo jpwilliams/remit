@@ -42,7 +42,7 @@ npm install remit
     - [`Data`](#data)
     - [`EventTarget`](#eventtarget)
 
-  - [`Remit([ConnectionOpts])`](#requestconnectionopts)
+  - [`Remit([ConnectionOpts])`](#remitconnectionopts)
     - [`request(name | RequestOpts [, Data ])`](#requestname--requestopts-data)
       - [`request(name | RequestOpts, Data) (Promise)`](#requestname--requestopts-data-promise)
       - [`request(name | RequestOpts)(Data) (Promise)`](#requestname--requestoptsdata-promise)
