@@ -3,6 +3,7 @@ const packageJson = require('../package.json')
 
 function generateConnectionOptions (name) {
   return {
+    noDelay: true,
     clientProperties: {
       connection_name: name,
       powered_by: `${packageJson.name}@${packageJson.version} (${packageJson.repository.url.substr(0, packageJson.repository.url.length - 4)}/tree/${packageJson.version})`,
