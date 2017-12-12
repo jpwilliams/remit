@@ -1,8 +1,8 @@
 const stack = require('callsite')
 
 module.exports = {
-  capture: function capture () {
-    return stack().slice(2, 4)
+  capture: function capture (extendedCapture) {
+    return stack().slice(...(extendedCapture ? [6, 8] : [3, 5]))
   },
 
   parse: function parse (callsites) {
