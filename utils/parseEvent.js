@@ -11,7 +11,7 @@ function parseEvent (properties = {}, fields = {}, data, isCustom) {
   }
 
   if (properties.headers) {
-    event.crumbs = properties.headers.crumbs || []
+    event.originId = properties.headers.originId || null
 
     if (properties.headers.uuid) {
       event.eventId = properties.headers.uuid
