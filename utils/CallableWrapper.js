@@ -2,7 +2,7 @@ const CallableInstance = require('callable-instance')
 const EventEmitter = require('eventemitter3')
 
 const listeners = [
-  'data',
+  'received',
   'sent',
   'timeout',
   'error',
