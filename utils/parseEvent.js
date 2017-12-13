@@ -1,26 +1,34 @@
 const { getNamespace } = require('cls-hooked')
+const { ulid } = require('ulid')
 
-function parseEvent (properties = {}, fields = {}, data, isCustom, grabBubbleId, what) {
+function parseEvent (properties = {}, fields = {}, data, isCustom, grabBubbleId, what, flowType) {
   const event = {
     eventId: properties.messageId,
     eventType: fields.routingKey,
     resource: properties.appId,
-    data: data
+    data: data,
+    metadata: {
+      instanceId: ulid()
+    }
   }
 
   if (!isCustom) {
     event.started = new Date()
   }
 
+  if (flowType) {
+    event.metadata.flowType = flowType
+  }
+
   if (what) {
-    event.bubbleId = properties.headers.fromBubbleId
-    event.fromBubbleId = properties.headers.bubbleId
+    event.metadata.bubbleId = properties.headers.fromBubbleId
+    event.metadata.fromBubbleId = properties.headers.bubbleId
   } else if (grabBubbleId) {
-    event.fromBubbleId = properties.headers.fromBubbleId
+    event.metadata.fromBubbleId = properties.headers.fromBubbleId
   }
 
   if (properties.headers) {
-    event.originId = properties.headers.originId || null
+    event.metadata.originId = properties.headers.originId || null
 
     if (properties.headers.uuid) {
       event.eventId = properties.headers.uuid
@@ -29,7 +37,7 @@ function parseEvent (properties = {}, fields = {}, data, isCustom, grabBubbleId,
     // event.fromId = properties.headers.fromId || event.eventId || null
     if (!what) {
       const ns = getNamespace('remit-breadcrumbs')
-      event.bubbleId = ns.get('bubbleId') || null
+      event.metadata.bubbleId = ns.get('bubbleId') || null
     }
     // event.fromBubbleId = properties.headers.bubbleId
 
