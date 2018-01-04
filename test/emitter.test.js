@@ -202,7 +202,7 @@ describe('Emitter', function () {
 
 function waitForNext (instance) {
   return new Promise((resolve, reject) => {
-    instance.on('received', (event) => {
+    instance.on('data', (event) => {
       resolve(event)
     })
   })
