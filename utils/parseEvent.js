@@ -1,7 +1,8 @@
 const { getNamespace } = require('cls-hooked')
 const { ulid } = require('ulid')
+const bubble = require('../utils/bubble')
 
-function parseEvent (properties = {}, fields = {}, data, isCustom, grabBubbleId, what, flowType) {
+function parseEvent (properties = {}, fields = {}, data, opts = {}) {
   const event = {
     eventId: properties.messageId,
     eventType: fields.routingKey,
@@ -12,34 +13,24 @@ function parseEvent (properties = {}, fields = {}, data, isCustom, grabBubbleId,
     }
   }
 
-  if (!isCustom) {
-    event.started = new Date()
-  }
-
-  if (flowType) {
-    event.metadata.flowType = flowType
-  }
-
-  if (what) {
-    event.metadata.bubbleId = properties.headers.fromBubbleId
-    event.metadata.fromBubbleId = properties.headers.bubbleId
-  } else if (grabBubbleId) {
-    event.metadata.fromBubbleId = properties.headers.fromBubbleId
+  if (opts.flowType) {
+    event.metadata.flowType = opts.flowType
   }
 
   if (properties.headers) {
-    event.metadata.originId = properties.headers.originId || null
+    event.metadata.originId = properties.headers.originId
+
+    if (opts.switchBubbles) {
+      event.metadata.bubbleId = properties.headers.fromBubbleId
+      event.metadata.fromBubbleId = properties.headers.bubbleId
+    } else {
+      event.metadata.fromBubbleId = properties.headers.fromBubbleId
+      event.metadata.bubbleId = bubble.get('bubbleId') || null
+    }
 
     if (properties.headers.uuid) {
       event.eventId = properties.headers.uuid
     }
-
-    // event.fromId = properties.headers.fromId || event.eventId || null
-    if (!what) {
-      const ns = getNamespace('remit-breadcrumbs')
-      event.metadata.bubbleId = ns.get('bubbleId') || null
-    }
-    // event.fromBubbleId = properties.headers.bubbleId
 
     if (properties.headers.scheduled) {
       event.scheduled = new Date(properties.headers.scheduled)
