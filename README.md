@@ -314,9 +314,11 @@ The following events can be listened to:
 
 ## Handlers
 
-[Endpoints](#) and [listeners](#) use handlers to reply to or, uh, handle incoming messages. In both cases, these are functions that can be passed when creating the listener or added/changed real-time by using the `.handler()` method.
+[Endpoints](#) and [listeners](#) use handlers to reply to or, uh, handle incoming messages. In both cases, these are functions or values that can be passed when creating the listener or added/changed real-time by using the `.handler()` method.
 
-All handlers are passed two items: `event` and `callback`. If `callback` is mapped, you will need to call it to indicate success/failure (see [Handling completion](#) below). If you do not map a callback, you can reply synchronously or by returning a Promise.
+If a handler is a value (i.e. not a function) then it will be returned as the data of a successful response. This is useful for simple endpoints that just need to return static or just simple mutable values.
+
+All handler _functions_ are passed two items: `event` and `callback`. If `callback` is mapped, you will need to call it to indicate success/failure (see [Handling completion](#) below). If you do not map a callback, you can reply synchronously or by returning a Promise.
 
 Handlers are used for determining when a message has been successfully dealt with. Internally, Remit uses this to ascertain when to draw more messages in from the queue and, in the case of listeners, when to remove the message from the server.
 
@@ -376,10 +378,12 @@ When called, the above will log out the event it's been passed. Here's an exampl
 
 #### Handling completion
 
-Handlers provide you with three different ways of showing completion: Promises, callbacks or a synchronous call. To decide what the handler should treat as a successful result, remit follows the following pattern:
+Handlers provide you with four different ways of showing completion: Promises, callbacks, a synchronous call or a straight value. To decide what the handler should treat as a successful result, remit follows the following pattern:
 
 ```
-if handler does not map second (callback) property:
+if handler is not a function:
+├── Return handler value
+else if handler does not map second (callback) property:
 ├── if handler returns a promise:
 │   └── Watch resolution/rejection of result
 │   else:

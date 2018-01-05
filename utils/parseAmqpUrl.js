@@ -4,7 +4,7 @@ function parseUrl (input) {
   const parsedUrl = url.parse(input, true)
 
   if (parsedUrl.protocol) {
-    if (parsedUrl.protocol !== 'amqp:') {
+    if (parsedUrl.protocol !== 'amqp:' && parsedUrl.protocol !== 'amqps:') {
       throw new Error('Incorrect protocol')
     }
   } else {

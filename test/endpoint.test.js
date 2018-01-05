@@ -66,6 +66,14 @@ describe('Endpoint', function () {
       remit = Remit({name: 'endpointRemit'})
     })
 
+    it('should return same start promise if called multiple times', function () {
+      const endpoint = remit.endpoint('start-test', () => {})
+      const start1 = endpoint.start()
+      const start2 = endpoint.start()
+
+      expect(start1).to.equal(start2)
+    })
+
     it('should assign new options over old ones', function () {
       const endpoint = remit.endpoint('options-test')
       expect(endpoint._options).to.have.property('event', 'options-test')
@@ -73,6 +81,15 @@ describe('Endpoint', function () {
       endpoint.options({queue: 'options-queue'})
       expect(endpoint._options).to.have.property('event', 'options-test')
       expect(endpoint._options).to.have.property('queue', 'options-queue')
+    })
+
+    it('should accept blank options (no changes)', function () {
+      const endpoint = remit.endpoint('options-blank')
+      expect(endpoint._options).to.have.property('event', 'options-blank')
+      expect(endpoint._options).to.have.property('queue', 'options-blank')
+      endpoint.options()
+      expect(endpoint._options).to.have.property('event', 'options-blank')
+      expect(endpoint._options).to.have.property('queue', 'options-blank')
     })
 
     it('should not start consuming until `start` called')
@@ -383,6 +400,26 @@ describe('Endpoint', function () {
       } catch (e) {
         expect(e).to.equal('fail9')
       }
+    })
+
+    it('should instantly return values in handlers', async function () {
+      await remit
+        .endpoint('handler-values')
+        .handler('handler-values-foobar')
+        .start()
+
+      const result = await remit.request('handler-values')()
+      expect(result).to.equal('handler-values-foobar')
+    })
+
+    it('should instantly return even falsey values in handlers', async function () {
+      await remit
+        .endpoint('handler-values-falsey')
+        .handler(0)
+        .start()
+
+      const result = await remit.request('handler-values-falsey')()
+      expect(result).to.equal(0)
     })
 
     it('should pass the same `event` to every handler', async function () {
