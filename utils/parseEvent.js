@@ -1,4 +1,3 @@
-const { getNamespace } = require('cls-hooked')
 const { ulid } = require('ulid')
 const bubble = require('../utils/bubble')
 
