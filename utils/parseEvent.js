@@ -17,6 +17,10 @@ function parseEvent (properties = {}, fields = {}, data, opts = {}) {
     event.metadata.flowType = opts.flowType
   }
 
+  if (opts.isReceiver) {
+    event.started = new Date()
+  }
+
   if (properties.headers) {
     event.metadata.originId = properties.headers.originId
 
