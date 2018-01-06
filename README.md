@@ -52,6 +52,7 @@ Endpoints and listeners are grouped by "Service Name" specified as `name` or the
 * [API/Usage](#)
 * [Events](#)
 * [Handlers](#)
+* [Tracing](#tracing)
 
 ---
 
@@ -448,3 +449,7 @@ const endpoint = await remit
     return performGuardedCall()
   })
 ```
+
+## Tracing
+
+See [`remitrace`](https://github.com/jpwilliams/remitrace).
