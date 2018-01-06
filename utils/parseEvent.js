@@ -1,16 +1,36 @@
-function parseEvent (properties = {}, fields = {}, data, isCustom) {
+const { ulid } = require('ulid')
+const bubble = require('../utils/bubble')
+
+function parseEvent (properties = {}, fields = {}, data, opts = {}) {
   const event = {
     eventId: properties.messageId,
     eventType: fields.routingKey,
     resource: properties.appId,
-    data: data
+    data: data,
+    metadata: {
+      instanceId: ulid()
+    }
   }
 
-  if (!isCustom) {
+  if (opts.flowType) {
+    event.metadata.flowType = opts.flowType
+  }
+
+  if (opts.isReceiver) {
     event.started = new Date()
   }
 
   if (properties.headers) {
+    event.metadata.originId = properties.headers.originId
+
+    if (opts.switchBubbles) {
+      event.metadata.bubbleId = properties.headers.fromBubbleId
+      event.metadata.fromBubbleId = properties.headers.bubbleId
+    } else {
+      event.metadata.fromBubbleId = properties.headers.fromBubbleId
+      event.metadata.bubbleId = bubble.get('bubbleId') || null
+    }
+
     if (properties.headers.uuid) {
       event.eventId = properties.headers.uuid
     }

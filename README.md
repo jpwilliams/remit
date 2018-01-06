@@ -52,6 +52,7 @@ Endpoints and listeners are grouped by "Service Name" specified as `name` or the
 * [API/Usage](#)
 * [Events](#)
 * [Handlers](#)
+* [Tracing](#tracing)
 
 ---
 
@@ -354,25 +355,21 @@ When called, the above will log out the event it's been passed. Here's an exampl
 
 ``` js
 {
-  // the time the message was taken from the server
-  started: <Date>,
+  started: <Date>, // time the message was taken from the server
+  eventId: <UID>, // a unique ID for the message (useful for idempotency purposes)
+  eventType: 'foo.bar', // the eventName used to call this endpoint/listener (useful when using wildcard listeners)
+  resource: 'service-user', // the name of the service that called/emitted this
+  data: {userId: 123}, // the data sent with the request
+  timestamp: <Date>, // the time the message was created
 
-  // a unique ID for the message
-  // (useful for idempotency purposes)
-  eventId: '01BQ5MRBJJ2AK9N23BW4S84WN1',
-
-  // the eventName used to call this endpoint/listener
-  // (useful when using wildcard listeners)
-  eventType: 'foo.bar',
-
-  // the name of the service that called/emitted this
-  resource: 'service-user',
-
-  // the data sent with the request
-  data: {userId: 123},
-
-  // the time the message was created
-  timestamp: <Date>
+  // extraneous information, currently containing tracing data
+  metadata: {
+    originId: <UID>, // the ID of the initial request or emission that started the entire chain of calls - every call in a chain will have the same ID here
+    bubbleId: <UID or NULL>, // the "bubble" (see more below) that the action happened in
+    fromBubbleId: <UID or NULL>, // the "bubble" (see more below) that the action was triggered from
+    instanceId: <UID>, // a unique ID for every action
+    flowType: <STRING or missing> // either `'entry'` to show it's an entrypoint to a bubble, `'exit'` to show it's an exit from a bubble or blank to show it is neither
+  }
 }
 ```
 
@@ -448,3 +445,7 @@ const endpoint = await remit
     return performGuardedCall()
   })
 ```
+
+## Tracing
+
+See [`remitrace`](https://github.com/jpwilliams/remitrace).
