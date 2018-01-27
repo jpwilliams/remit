@@ -2,7 +2,7 @@
 describe('Connection', function () {
   describe('#connect', function () {
     it(`connection should throw`, done => {
-      const url = 'amqp://fuck'
+      const url = 'amqp://not-a-real-host'
       const Remit = require('../')
 
       var originalException = process.listeners('uncaughtException').pop()
