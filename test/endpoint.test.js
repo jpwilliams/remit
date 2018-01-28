@@ -1,4 +1,5 @@
 /* global describe, it, before, expect */
+const { ulid } = require('ulid')
 const Remit = require('../')
 
 describe('Endpoint', function () {
@@ -453,5 +454,127 @@ describe('Endpoint', function () {
     })
 
     it('should throw if consumer cancelled remotely')
+
+    it('should do nothing if pause requested and not started', async function () {
+      const endpoint = remit.endpoint('foo')
+
+      const p = endpoint.pause()
+      expect(p).to.be.a('promise')
+
+      const res = await p
+      expect(res).to.equal(undefined)
+
+      expect(endpoint._started).to.equal(undefined)
+      expect(endpoint._paused).to.equal(undefined)
+    })
+
+    it('should run start if resume requested and not started', async function () {
+      const endpoint = remit
+        .endpoint('foo')
+        .handler(() => {})
+
+      const p = endpoint.resume()
+      expect(p).to.be.a('promise')
+
+      const res = await p
+      expect(res).to.equal(endpoint)
+      expect(endpoint._started).to.be.a('promise')
+    })
+
+    it('should pause consumption if running and pause requested', async function () {
+      this.timeout(6000)
+      this.slow(6000)
+      const queue = ulid()
+
+      let hits = 0
+      const req = remit
+        .request(queue)
+        .options({
+          timeout: 2000
+        })
+
+      const endpoint = await remit
+        .endpoint(queue)
+        .handler(() => {
+          hits++
+        })
+        .start()
+
+      expect(endpoint._started).to.be.a('promise')
+
+      await req()
+      expect(hits).to.equal(1)
+
+      const p = endpoint.pause()
+      expect(p).to.be.a('promise')
+      expect(endpoint._paused).to.be.a('promise')
+
+      let errorCaught = false
+      await p
+
+      try {
+        await req()
+      } catch (e) {
+        errorCaught = true
+        expect(e).to.be.an('object')
+        expect(e).to.have.property('code', 'request_timedout')
+        expect(e).to.have.property('message', 'Request timed out after no response for 2000ms')
+      }
+
+      expect(errorCaught).to.equal(true)
+      expect(hits).to.equal(1)
+    })
+
+    it('should resume consumption if paused and resume requested', async function (done) {
+      this.timeout(6000)
+      this.slow(6000)
+      const queue = ulid()
+
+      let hits = 0
+      const req = remit
+        .request(queue)
+        .options({
+          timeout: 2000
+        })
+
+      const endpoint = await remit
+        .endpoint(queue)
+        .handler(() => {
+          console.log('shite')
+          hits++
+        })
+        .start()
+
+      await endpoint.pause()
+
+      let errorCaught = false
+
+      try {
+        await req()
+      } catch (e) {
+        errorCaught = true
+        expect(e).to.be.an('object')
+        expect(e).to.have.property('code', 'request_timedout')
+        expect(e).to.have.property('message', 'Request timed out after no response for 2000ms')
+      }
+
+      expect(errorCaught).to.equal(true)
+      expect(hits).to.equal(0)
+
+      // set a timeout to give rabbitmq time to clear
+      // the old message
+      setTimeout(async () => {
+        const p = endpoint.resume()
+        expect(p).to.be.a('promise')
+
+        await p
+        await req()
+        expect(hits).to.equal(1)
+      }, 1000)
+    })
+
+    it('should return the same promise if pause requested multiple times')
+
+    it('should return the same promise if resume requested multiple times')
   })
 })
