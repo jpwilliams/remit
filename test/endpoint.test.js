@@ -462,7 +462,7 @@ describe('Endpoint', function () {
       expect(p).to.be.a('promise')
 
       const res = await p
-      expect(res).to.equal(undefined)
+      expect(res).to.equal(endpoint)
 
       expect(endpoint._started).to.equal(undefined)
       expect(endpoint._paused).to.equal(undefined)
@@ -510,7 +510,8 @@ describe('Endpoint', function () {
       expect(endpoint._paused).to.be.a('promise')
 
       let errorCaught = false
-      await p
+      const res = await p
+      expect(res).to.equal(endpoint)
 
       try {
         await req()
@@ -545,7 +546,8 @@ describe('Endpoint', function () {
         })
         .start()
 
-      await endpoint.pause()
+      const res = await endpoint.pause()
+      expect(res).to.equal(endpoint)
 
       let errorCaught = false
 
@@ -568,7 +570,8 @@ describe('Endpoint', function () {
           const p = endpoint.resume()
           expect(p).to.be.a('promise')
 
-          await p
+          const resumeRes = await p
+          expect(resumeRes).to.equal(endpoint)
           await req()
           expect(hits).to.equal(1)
           resolve()
@@ -592,7 +595,8 @@ describe('Endpoint', function () {
       console.log(typeof p1, typeof p2)
       expect(p1).to.equal(p2)
 
-      await p1
+      const res = await p1
+      expect(res).to.equal(endpoint)
     })
 
     it('should return the same promise if resume requested multiple times', async function () {
@@ -612,7 +616,8 @@ describe('Endpoint', function () {
       expect(p2).to.be.a('promise')
       expect(p1).to.equal(p2)
 
-      await p1
+      const res = await p1
+      expect(res).to.equal(endpoint)
     })
   })
 })
