@@ -541,7 +541,6 @@ describe('Endpoint', function () {
       const endpoint = await remit
         .endpoint(queue)
         .handler(() => {
-          console.log('shite')
           hits++
         })
         .start()
@@ -592,7 +591,6 @@ describe('Endpoint', function () {
 
       expect(p1).to.be.a('promise')
       expect(p2).to.be.a('promise')
-      console.log(typeof p1, typeof p2)
       expect(p1).to.equal(p2)
 
       const res = await p1
