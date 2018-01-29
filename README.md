@@ -69,6 +69,8 @@ Endpoints and listeners are grouped by "Service Name" specified as `name` or the
   * [endpoint.on(eventName, listener)](#)
   * [endpoint.options(options)](#)
   * [endpoint.start()](#)
+  * [endpoint.pause()](#)
+  * [endpoint.resume()](#)
 * [emit(event)](#)
   * [emit.on(eventName, listener)](#)
   * [emit.options(options)](#)
@@ -79,6 +81,8 @@ Endpoints and listeners are grouped by "Service Name" specified as `name` or the
   * [listen.on(eventName, listener)](#)
   * [listen.options(options)](#)
   * [listen.start()](#)
+  * [listen.pause()](#)
+  * [listen.resume()](#)
 
 ---
 
@@ -242,6 +246,22 @@ Returns a reference to the `endpoint`, so that calls can be chained.
 
 #### `endpoint.start()`
 
+#### `endpoint.pause()`
+
+* `cold` &lt;Boolean&gt;
+
+Pauses consumption of messages for this endpoint. By default, any messages currently in memory will be processed (a "warm" pause). If `cold` is provided as truthy, any messages in memory will be pushed back to RabbitMQ.
+
+Has no effect if the endpoint is already paused or has not yet been started.
+
+Returns a promise that resolves with the endpoint when consumption has been successfully paused.
+
+#### `endpoint.resume()`
+
+Resumes consumption of messages for this endpoint after being paused using [`pause()`](#). If run on an endpoint that is not yet started, the endpoint will attempt to start.
+
+Returns a promise that resolves with the endpoint when consumption has been successfully resumed.
+
 ----
 
 #### `emit.on(eventName, listener)`
@@ -275,6 +295,24 @@ Returns a reference to the `listen`, so that calls can be chained.
 #### `listen.options(options)`
 
 #### `listen.start()`
+
+#### `listen.pause()`
+
+* `cold` &lt;Boolean&gt;
+
+Pauses consumption of messages for this listener. By default, any messages currently in memory will be processed (a "warm" pause). If `cold` is provided as truthy, any messages in memory will be pushed back to RabbitMQ.
+
+Has no effect if the listener is already paused or has not yet been started.
+
+Returns a promise that resolves with the listener when consumption has been successfully paused.
+
+#### `listen.resume()`
+
+Resumes consumption of messages for this listener after being paused using [`pause()`](#). If run on a listener that is not yet started, the listener will attempt to start.
+
+Returns a promise that resolves with the listener when consumption has been successfully resumed.
+
+---
 
 ## Events
 
