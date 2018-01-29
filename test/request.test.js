@@ -142,6 +142,7 @@ describe('Request', function () {
     })
 
     it('should return fallback if timing out and fallback set')
+    it('should expire from queue after same time as timeout')
     it('should send NULL if given unparsable data')
   })
 })
