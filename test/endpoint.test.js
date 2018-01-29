@@ -525,7 +525,7 @@ describe('Endpoint', function () {
       expect(hits).to.equal(1)
     })
 
-    it('should resume consumption if paused and resume requested', async function (done) {
+    it('should resume consumption if paused and resume requested', async function () {
       this.timeout(6000)
       this.slow(6000)
       const queue = ulid()
@@ -563,18 +563,56 @@ describe('Endpoint', function () {
 
       // set a timeout to give rabbitmq time to clear
       // the old message
-      setTimeout(async () => {
-        const p = endpoint.resume()
-        expect(p).to.be.a('promise')
+      await new Promise((resolve, reject) => {
+        setTimeout(async () => {
+          const p = endpoint.resume()
+          expect(p).to.be.a('promise')
 
-        await p
-        await req()
-        expect(hits).to.equal(1)
-      }, 1000)
+          await p
+          await req()
+          expect(hits).to.equal(1)
+          resolve()
+        }, 1000)
+      })
     })
 
-    it('should return the same promise if pause requested multiple times')
+    it('should return the same promise if pause requested multiple times', async function () {
+      const queue = ulid()
 
-    it('should return the same promise if resume requested multiple times')
+      const endpoint = await remit
+        .endpoint(queue)
+        .handler(() => {})
+        .start()
+
+      const p1 = endpoint.pause()
+      const p2 = endpoint.pause()
+
+      expect(p1).to.be.a('promise')
+      expect(p2).to.be.a('promise')
+      console.log(typeof p1, typeof p2)
+      expect(p1).to.equal(p2)
+
+      await p1
+    })
+
+    it('should return the same promise if resume requested multiple times', async function () {
+      const queue = ulid()
+
+      const endpoint = await remit
+        .endpoint(queue)
+        .handler(() => {})
+        .start()
+
+      await endpoint.pause()
+
+      const p1 = endpoint.resume()
+      const p2 = endpoint.resume()
+
+      expect(p1).to.be.a('promise')
+      expect(p2).to.be.a('promise')
+      expect(p1).to.equal(p2)
+
+      await p1
+    })
   })
 })
