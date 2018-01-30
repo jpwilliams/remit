@@ -246,7 +246,7 @@ Returns a reference to the `endpoint`, so that calls can be chained.
 
 #### `endpoint.start()`
 
-#### `endpoint.pause()`
+#### `endpoint.pause([cold])`
 
 * `cold` &lt;Boolean&gt;
 
@@ -296,7 +296,7 @@ Returns a reference to the `listen`, so that calls can be chained.
 
 #### `listen.start()`
 
-#### `listen.pause()`
+#### `listen.pause([cold])`
 
 * `cold` &lt;Boolean&gt;
 
