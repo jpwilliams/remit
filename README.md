@@ -134,7 +134,7 @@ const request = remit
 
 The error is still sent over the request's EventEmitter, so listening to `'error'` lets you handle the error however you wish.
 
-You can change the fallback at any point in a request's life and unset it by explicitly passing `undefined`.
+You can change the fallback at any point in a request's life and unset it by passing no arguments to the function.
 
 Returns a reference to the `request`, so that calls can be chained.
 
