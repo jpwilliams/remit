@@ -44,5 +44,7 @@ describe('Listener', function () {
     it('should expose a "start" function', function () {
       expect(listener.start).to.be.a('function')
     })
+
+    it('should not throw when message has no headers property')
   })
 })

@@ -618,4 +618,6 @@ describe('Endpoint', function () {
       expect(res).to.equal(endpoint)
     })
   })
+
+  it('should not throw when message has no headers property')
 })
