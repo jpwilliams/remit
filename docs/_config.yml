@@ -3,7 +3,7 @@ email: jpwilliamsphotography@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   RabbitMQ-backed microservices supporting RPC, pubsub, automatic service discovery and scaling with no code changes.
 baseurl: "/remit" # the subpath of your site, e.g. /blog
-url: "https://jpwilliams.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+url: "" # the base hostname & protocol for your site, e.g. http://example.com
 
 sidebar_collections:
   - start
@@ -11,8 +11,6 @@ sidebar_collections:
   - api
   - advanced
   - change
-
-collections_dir: my_collections
 
 collections:
   start:
