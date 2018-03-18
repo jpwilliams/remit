@@ -35,7 +35,7 @@ a {
   box-sizing: border-box;
 
   .innerWrapper {
-    padding: 2rem 0;
+    margin: 2rem 0;
     display: -webkit-box;
     flex-direction: row;
   }
@@ -54,6 +54,13 @@ a {
   width: calc(200px - 2rem);
   max-width: 30%;
   padding-right: 2rem;
+  will-change: min-height;
+
+  .sidebar-inner {
+    transform: translate(0, 0);
+    transform: translate3d(0, 0, 0);
+    will-change: position, transform;
+  }
 
   .sidebar-header {
     text-transform: uppercase;
@@ -66,6 +73,10 @@ a {
     margin: 0 0 2rem;
     list-style: none;
     padding: 0;
+
+    &:last-child {
+      margin: 0;
+    }
 
     .sidebar-item {
       &.active {

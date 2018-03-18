@@ -1,32 +1,32 @@
-<div class="sidebar">
-  {% for id in site.sidebar_collections %}
-    {% assign collection = site.collections | where: "label", id | first %}
-    {% assign docs = site[id] | sort: 'order' %}
+<div id="sidebar" class="sidebar">
+  <div class="sidebar-inner">
+    {% for id in site.sidebar_collections %}
+      {% assign collection = site.collections | where: "label", id | first %}
+      {% assign docs = site[id] | sort: 'order' %}
 
-    {% for doc in docs %}
-      {% if forloop.first %}
-        <div class="sidebar-header">{{ collection.title }}</div>
+      {% for doc in docs %}
+        {% if forloop.first %}
+          <div class="sidebar-header">{{ collection.title }}</div>
 
-        <ul class="sidebar-list">
-      {% endif %}
+          <ul class="sidebar-list">
+        {% endif %}
 
-      {% if page.url == doc.url %}
-        {% assign itemClass = 'sidebar-item active' %}
-      {% else %}
-        {% assign itemClass = 'sidebar-item' %}
-      {% endif %}
+        {% if page.url == doc.url %}
+          {% assign itemClass = 'sidebar-item active' %}
+        {% else %}
+          {% assign itemClass = 'sidebar-item' %}
+        {% endif %}
 
-      <li class="{{ itemClass }}">
-        <a href="{{ site.baseurl }}{{ doc.url }}">
-          {{ doc.title }}
-        </a>
-      </li>
+        <li class="{{ itemClass }}">
+          <a href="{{ site.baseurl }}{{ doc.url }}">
+            {{ doc.title }}
+          </a>
+        </li>
 
-      {% if forloop.last %}
-        </ul>
-
-        <div class="divider"></div>
-      {% endif %}
+        {% if forloop.last %}
+          </ul>
+        {% endif %}
+      {% endfor %}
     {% endfor %}
-  {% endfor %}
+  </div>
 </div>
