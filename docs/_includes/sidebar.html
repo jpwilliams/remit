@@ -1,7 +1,7 @@
 <div class="sidebar">
   {% for id in site.sidebar_collections %}
     {% assign collection = site.collections | where: "label", id | first %}
-    {% assign docs = site[id] %}
+    {% assign docs = site[id] | sort: 'order' %}
 
     {% for doc in docs %}
       {% if forloop.first %}
