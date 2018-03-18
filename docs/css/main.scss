@@ -1,5 +1,14 @@
 ---
 ---
+
+html {
+  // ensure scroll bar always appears so that
+  // it appearing/disappearing doesn't adjust
+  // page width (and therefore content position)
+  // between pages.
+  overflow-y: scroll;
+}
+
 html, body {
   padding: 0;
   margin: 0;
