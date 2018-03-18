@@ -71,8 +71,17 @@ a {
   -webkit-box-flex: 1;
 
   h1, h2, h3, h4, h5 {
+    position: relative;
+
     &:first-child {
       margin-top: 0;
+    }
+
+    &:before {
+      content: '#';
+      position: absolute;
+      left: -1em;
+      color: #0096e2;
     }
   }
 }
