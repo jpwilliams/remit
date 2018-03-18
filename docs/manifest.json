@@ -1,0 +1,10 @@
+{
+  "name": "Remit documentation",
+  "short_name": "Remit docs",
+  "lang": "en-GB",
+  "display": "standalone",
+  "start_url": ".",
+  "theme_color": "#0096e2",
+  "background_color": "#0096e2",
+  "description": "RabbitMQ-backed microservices supporting RPC, pubsub, automatic service discovery and scaling with no code changes."
+}
