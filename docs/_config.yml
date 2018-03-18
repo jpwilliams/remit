@@ -24,7 +24,7 @@ collections:
   api:
     output: true
     permalink: /docs/api/:path
-    title: API reference
+    title: API
   advanced:
     output: true
     permalink: /docs/advanced/:path
