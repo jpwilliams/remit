@@ -18,7 +18,12 @@
 
 <title>{{ title }}</title>
 <meta name="description" content="{{ description }}">
-
 <link rel="manifest" href="{{ site.baseurl }}/manifest.json">
-<link rel="stylesheet" href="{{ site.baseurl }}/css/syntax.css">
-<link rel="stylesheet" href="{{ site.baseurl }}/css/main.css">
+<link rel="preload" as="style" href="{{ site.baseurl }}/css/syntax.css" onload="this.rel='stylesheet'">
+
+{% capture criticalStyles %}
+{% include critical.scss %}
+{% endcapture %}
+
+<style>{{ criticalStyles | scssify }}</style>
+
