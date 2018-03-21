@@ -1,6 +1,7 @@
 # remit
 
 [![Build Status](https://travis-ci.org/jpwilliams/remit.svg?branch=master)](https://travis-ci.org/jpwilliams/remit) [![Coverage Status](https://coveralls.io/repos/github/jpwilliams/remit/badge.svg?branch=master)](https://coveralls.io/github/jpwilliams/remit?branch=v2) [![npm downloads per month](https://img.shields.io/npm/dm/remit.svg)](https://www.npmjs.com/package/remit) [![npm version](https://img.shields.io/npm/v/remit.svg)](https://www.npmjs.com/package/remit)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjpwilliams%2Fremit.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjpwilliams%2Fremit?ref=badge_shield)
 
 A wrapper for RabbitMQ for communication between microservices. No service discovery needed.
 
@@ -487,3 +488,7 @@ const endpoint = await remit
 ## Tracing
 
 See [`remitrace`](https://github.com/jpwilliams/remitrace).
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fjpwilliams%2Fremit.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fjpwilliams%2Fremit?ref=badge_large)
