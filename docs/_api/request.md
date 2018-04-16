@@ -86,7 +86,7 @@ While the fallback will be returned in place of an error, the `request` will sti
 
 The fallback can be changed at any point in a `request`'s life and can be unset by passing no arguments to the function.
 
-Returns areference to the `request` so that calls can be chained.
+Returns a reference to the `request` so that calls can be chained.
 
 ### Add listeners
 
