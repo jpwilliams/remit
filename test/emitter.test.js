@@ -97,7 +97,6 @@ describe('Emitter', function () {
         .send({foo: 'bar'})
 
       expect(sentEvent).to.have.property('eventType', 'emit-usage')
-      expect(sentEvent).to.not.have.property('started')
       expect(sentEvent).to.have.property('eventId')
       expect(sentEvent).to.have.property('resource', 'emitRemit')
       expect(sentEvent).to.have.property('resourceTrace')
@@ -110,7 +109,6 @@ describe('Emitter', function () {
       expect(events).to.have.lengthOf(2)
 
       events.forEach((event) => {
-        expect(event).to.have.property('started')
         expect(event.eventId).to.equal(sentEvent.eventId)
         expect(+event.timestamp).to.equal(+sentEvent.timestamp)
         expect(event.eventType).to.equal(sentEvent.eventType)
@@ -133,7 +131,6 @@ describe('Emitter', function () {
         .send({bar: 'baz'})
 
       expect(sentEvent).to.have.property('eventId')
-      expect(sentEvent).to.not.have.property('started')
       expect(sentEvent).to.have.property('eventType', 'emit-usage')
       expect(sentEvent).to.have.property('resource', 'emitRemit')
       expect(sentEvent.data).to.have.property('bar', 'baz')
@@ -144,7 +141,6 @@ describe('Emitter', function () {
       const events = await op
 
       events.forEach((event) => {
-        expect(event).to.have.property('started')
         expect(event.delay).to.equal(sentEvent.delay)
         expect(+event.timestamp).to.equal(+sentEvent.timestamp)
         expect(+event.started).to.be.above(+sentEvent.timestamp + sentEvent.delay)
@@ -174,7 +170,6 @@ describe('Emitter', function () {
         .send({bar: 'baz'})
 
       expect(sentEvent).to.have.property('eventId')
-      expect(sentEvent).to.not.have.property('started')
       expect(sentEvent).to.have.property('eventType', 'emit-usage')
       expect(sentEvent).to.have.property('resource', 'emitRemit')
       expect(sentEvent.data).to.have.property('bar', 'baz')
@@ -186,7 +181,6 @@ describe('Emitter', function () {
       const events = await op
 
       events.forEach((event) => {
-        expect(event).to.have.property('started')
         expect(event.schedule).to.equal(sentEvent.schedule)
         expect(+event.timestamp).to.equal(+sentEvent.timestamp)
         expect(+event.started).to.be.above(+sentEvent.scheduled)
