@@ -1,9 +1,13 @@
-function parseEvent (properties = {}, fields = {}, data) {
+function parseEvent (properties = {}, fields = {}, data, opts = {}) {
   const event = {
     eventId: properties.messageId,
     eventType: fields.routingKey,
     resource: properties.appId,
     data: data
+  }
+
+  if (opts.isReceiver) {
+    event.started = new Date()
   }
 
   if (properties.headers) {
