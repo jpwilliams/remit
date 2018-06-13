@@ -20,7 +20,7 @@ Officially supported tracers that provide Node.js clients are currently:
 
 Using a tracer with Remit is exceedingly simple. When instantiating Remit, simply pass in a `tracer` option. The example below uses the popular [jaegertracing/jaeger-client-node](https://github.com/jaegertracing/jaeger-client-node).
 
-``` js
+{% highlight js %}
 const Remit = require('remit')
 const { initTracer } = require('jaeger-client')
 const serviceName = 'my-traced-service'
@@ -40,7 +40,7 @@ const remit = Remit({
   name: serviceName,
   tracer
 })
-```
+{% endhighlight %}
 
 All calls for this Remit instance will now be traced! Great!
 
@@ -52,7 +52,7 @@ We currently use [jeff-lewis/cls-hooked](https://github.com/jeff-lewis/cls-hooke
 
 Remit allows you to pass in a `namespace` upon instantiation, so you can have `get`/`set` access to the namespace providing the relevant contexts. If you don't know how these contexts work, I strongly suggest you read the [jeff-lewis/cls-hooked](https://github.com/jeff-lewis/cls-hooked) docs and get a grip on namespaces and contexts before use.
 
-``` js
+{% highlight js %}
 const Remit = require('remit')
 const { Tracer } = require('opentracing')
 const cls = require('cls-hooked')
@@ -65,6 +65,6 @@ const remit = Remit({ namespace, tracer })
 // span context, so set this to update it.
 const span = tracer.startSpan('my-http-request')
 namespace.set('context', span.context())
-```
+{% endhighlight %}
 
 This `namespace` API is currently seen as _experimental_ and __will change without a major version bump upon the OpenTracing specificaton decision__.
