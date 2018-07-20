@@ -82,6 +82,14 @@ describe('Request', function () {
       expect(request._options).to.have.property('event', 'options-queue')
     })
 
+    it('should parse timestrings in a timeout option', function () {
+      const request = remit.request('options-timestring-test')
+      request.options({timeout: '30m'})
+      expect(request._options).to.have.property('timeout', 1800000)
+      request.options({timeout: '2s'})
+      expect(request._options).to.have.property('timeout', 2000)
+    })
+
     it('should return \'ready\' promise when request is ready to be used', function () {
       this.slow(200)
 
