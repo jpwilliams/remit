@@ -73,6 +73,14 @@ describe('Emitter', function () {
       listenRemit2 = r2
     })
 
+    it('should parse timestrings in a delay option', function () {
+      const emit = emitRemit.emit('options-timestring-test')
+      emit.options({delay: '30m'})
+      expect(emit._options).to.have.property('delay', 1800000)
+      emit.options({delay: '2s'})
+      expect(emit._options).to.have.property('delay', 2000)
+    })
+
     it('should return promise on send that resolves on sent')
     it('should emit "sent" on sending')
     it('should add priority if given in options before send')
