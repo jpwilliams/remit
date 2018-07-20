@@ -20,7 +20,7 @@ const user456 = await getUser(456)
 
 ### Create and sending a request
 
-`remit.request(event[, options])` creates a new request for data from an [endpoint][endpoint] dictated by `event`. Options can be passed in straight away by passing an object. If an object is passed, `event` is required. See `request.options` for available options.
+`remit.request(event[, options])` creates a new requester for data from an [endpoint][endpoint] dictated by `event`. Options can be passed in straight away by passing an object. If an object is passed, `event` is required. See `request.options` for available options.
 
 The best practice for requests is to create them once and reuse them. Creation returns a function which, when run, returns a promise that's either resolved or rejected depending on whether the request succeeded or failed.
 
@@ -61,6 +61,16 @@ const getPost = remit.request({
 })
 {% endhighlight %}
 
+Available options:
+
+| Option | Type | Required | Default | Description |
+| ------------------------------------------------ |
+| `event` | _string_ | yes | | Only required if _creating_ a request with an options block. Cannot be changed once the request has been created. |
+| `timeout` | _string_ or _integer_ | | `30s` | Setting to `0` will result in there being no timeout. Otherwise it is the amount of time in milliseconds to wait before declaring the request "timed out". Supports an integer representing milliseconds or a [zeit/ms](https://github.com/zeit/ms)-compatible string.
+| `priority` | _integer_ | | `0` | Can be an integer between `0` and `10`. Higher priority requests will go to the front of queues over lower priority requests.
+
+Returns a reference to the `request` so that calls can be chained.
+
 ### Set a fallback
 
 `request.fallback(data)` specifies data to be returned if a request fails for any reason. Can be used to gracefully handle failing calls across multiple requests. When a fallback is set, any request that fails will instead resolve successfully with the data passed to this function.
@@ -76,7 +86,7 @@ While the fallback will be returned in place of an error, the `request` will sti
 
 The fallback can be changed at any point in a `request`'s life and can be unset by passing no arguments to the function.
 
-Returns areference to the `request` so that calls can be chained.
+Returns a reference to the `request` so that calls can be chained.
 
 ### Add listeners
 
