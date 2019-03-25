@@ -20,8 +20,7 @@ npm install remit --save
 
 Done!
 
-Next: [Simple example][simple-example]
+Next: [Simple example]({{ site.baseurl }}{% link _start/simple-example.md %})
 
 [rabbitmq]: https://www.rabbitmq.com
 [rabbitmq-download]: https://www.rabbitmq.com/download.html
-[simple-example]: /docs/getting-started/simple-example
