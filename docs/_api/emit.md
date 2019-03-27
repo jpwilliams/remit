@@ -44,8 +44,57 @@ If `options` are defined after `data` when _emitting_, the options only apply to
 
 ### Set options
 
+`emit.options(options)` allows you to set the current options for the emission. This can be done at any point in an `emit`ter's life but will not affect emissions that have already been sent.
+
+{% highlight js %}
+const emitUserCreated = remit
+  .emit('user.created')
+  .options({
+
+  })
+
+// can also set on creation; `event` is required
+const emitPostCreated = remit.emit({
+  event: 'post.created',
+
+})
+{% endhighlight %}
+
+Available options:
+
+| Option | Type | Required | Default | Description |
+| ------------------------------------------------ |
+| `event` | _string_ | yes | | Only required if _creating_ an emitter with an options block. |
+| `priority` | _integer_ | | `0` | Can be an integer between `0` and `10`. Higher priority emissions will go to the front of queues before lower priority emissions. |
+| `schedule` | _Date_ | | | Schedule the earliest an emission should be sent to listeners. Mutually exclusive with `delay`; `schedule` takes priority. See Delaying/scheduling below for more information. |
+| `delay` | _integer_ | | | Delay an emission for a minimum amount of time. Mutually exclusive with `schedule`; `schedule` takes priority. See Delaying/scheduling below for more information. |
+
+Returns a reference to the `emit`ter so that calls can be chained.
+
 ### Delaying/scheduling
+
+You can delay emissions for an amount of time. They'll be held in a separate messaging queue until they're released, being pushed as normal to the relevant listeners as if had just been emitted.
+
+This is a good alternative to methods like `cron`.
+
+You can `schedule` the emission by providing a _Date_, or `delay` the emission a number of seconds using an _integer_.
 
 ### Add listeners
 
+`emit.on` can be used to register listeners for events specific to a created emitter. See the [Events][events] page for more information on the events emitted.
+
+Returns a reference to the `emit`ter so that calls can be chained.
+
 ### Wait for an emitter to be ready
+
+No setup is needed to set up an emitter, but as a future-proofing measure you can still use an `emit.ready()` promise to check that it's ready to go.
+
+{% highlight js %}
+const emitUserCreated = await remit
+  .emit('user.created')
+  .ready()
+
+// ready to emit
+{% endhighlight %}
+
+Returns a reference to the `emit`ter so that calls can be chained.
