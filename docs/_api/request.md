@@ -18,9 +18,9 @@ const user123 = await getUser(123)
 const user456 = await getUser(456)
 {% endhighlight %}
 
-### Create and sending a request
+### Create and send a request
 
-`remit.request(event[, options])` creates a new requester for data from an [endpoint][endpoint] dictated by `event`. Options can be passed in straight away by passing an object. If an object is passed, `event` is required. See `request.options` for available options.
+`remit.request(event[, options])` creates a new requester for data from an [endpoint][endpoint] dictated by `event`. Options can be passed in straight away by passing an object in place of `event`. If an object is passed, the `event` key is required. See `request.options` for available options.
 
 The best practice for requests is to create them once and reuse them. Creation returns a function which, when run, returns a promise that's either resolved or rejected depending on whether the request succeeded or failed.
 
@@ -45,7 +45,7 @@ const user = await getUser.send(456)
 
 ### Set options
 
-`request.options(options)` allows you to set the current options for the request. This can be done at any point in a `request`'s life but will not affect timeouts for requests that have already been sent.
+`request.options(options)` allows you to set the current options for the request. This can be done at any point in a `request`'s life but will not affect requests that have already been sent.
 
 {% highlight js %}
 const getUser = remit
@@ -65,9 +65,9 @@ Available options:
 
 | Option | Type | Required | Default | Description |
 | ------------------------------------------------ |
-| `event` | _string_ | yes | | Only required if _creating_ a request with an options block. Cannot be changed once the request has been created. |
-| `timeout` | _string_ or _integer_ | | `30s` | Setting to `0` will result in there being no timeout. Otherwise it is the amount of time in milliseconds to wait before declaring the request "timed out". Supports an integer representing milliseconds or a [zeit/ms](https://github.com/zeit/ms)-compatible string.
-| `priority` | _integer_ | | `0` | Can be an integer between `0` and `10`. Higher priority requests will go to the front of queues over lower priority requests.
+| `event` | _string_ | yes | | Only required if _creating_ a request with an options block. |
+| `timeout` | _string_ or _integer_ | | `30s` | Setting to `0` will result in there being no timeout. Otherwise it is the amount of time in milliseconds to wait before declaring the request "timed out". Supports an integer representing milliseconds or a [zeit/ms](https://github.com/zeit/ms)-compatible string. |
+| `priority` | _integer_ | | `0` | Can be an integer between `0` and `10`. Higher priority requests will go to the front of queues over lower priority requests. |
 
 Returns a reference to the `request` so that calls can be chained.
 
