@@ -11,7 +11,7 @@
     "test": "./node_modules/.bin/mocha --require test/bootstrap test/*.test.js test/**/*.test.js --exit",
     "travis": "./node_modules/.bin/nyc ./node_modules/.bin/_mocha --require test/bootstrap test/*.test.js test/**/*.test.js --exit && ./node_modules/.bin/nyc report --reporter=lcovonly && cat ./coverage/lcov.info | ./node_modules/.bin/coveralls && rm -rf ./coverage"
   },
-  "author": "Jack Williams <jack@wildfire.gg>",
+  "author": "Jack Williams <jpwilliamsphotography@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "amqplib": "^0.5.1",
