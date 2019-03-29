@@ -77,8 +77,10 @@ describe('Emitter', function () {
       const emit = emitRemit.emit('options-timestring-test')
       emit.options({delay: '30m'})
       expect(emit._options).to.have.property('delay', 1800000)
+      expect(emit._options).to.have.property('schedule', null)
       emit.options({delay: '2s'})
       expect(emit._options).to.have.property('delay', 2000)
+      expect(emit._options).to.have.property('schedule', null)
     })
 
     it('should return promise on send that resolves on sent')
@@ -178,7 +180,7 @@ describe('Emitter', function () {
 
       const sentEvent = await emitRemit
         .emit('emit-usage')
-        .options({schedule: d})
+        .options({delay: d})
         .send({bar: 'baz'})
 
       expect(sentEvent).to.have.property('eventId')
