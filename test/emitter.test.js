@@ -73,11 +73,23 @@ describe('Emitter', function () {
       listenRemit2 = r2
     })
 
-    it('should parse timestrings in a delay option', function () {
+    it('should parse timestrings and dates in a delay option', function () {
       const emit = emitRemit.emit('options-timestring-test')
+
+      emit.options({delay: 20})
+      expect(emit._options).to.have.property('delay', 20000)
+      expect(emit._options).to.have.property('schedule', null)
+
+      const d = new Date()
+      d.setSeconds(d.getSeconds() + 15)
+      emit.options({delay: d})
+      expect(emit._options).to.have.property('delay', null)
+      expect(emit._options).to.have.property('schedule', d)
+
       emit.options({delay: '30m'})
       expect(emit._options).to.have.property('delay', 1800000)
       expect(emit._options).to.have.property('schedule', null)
+
       emit.options({delay: '2s'})
       expect(emit._options).to.have.property('delay', 2000)
       expect(emit._options).to.have.property('schedule', null)
