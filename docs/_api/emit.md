@@ -66,8 +66,7 @@ Available options:
 | ------------------------------------------------ |
 | `event` | _string_ | yes | | Only required if _creating_ an emitter with an options block. |
 | `priority` | _integer_ | | `0` | Can be an integer between `0` and `10`. Higher priority emissions will go to the front of queues before lower priority emissions. |
-| `schedule` | _Date_ | | | Schedule the earliest an emission should be sent to listeners. Mutually exclusive with `delay`; `schedule` takes priority. See Delaying/scheduling below for more information. |
-| `delay` | _integer_ | | | Delay an emission for a minimum amount of time. Mutually exclusive with `schedule`; `schedule` takes priority. See Delaying/scheduling below for more information. |
+| `delay` | _integer_/_string_/_Date_ | | | Delay an emission for a minimum amount of time. Either an _integer_ (milliseconds), a [zeit/ms](https://npm.im/ms) _string_, or a _Date_. See Delaying/scheduling below for more information. |
 
 Returns a reference to the `emit`ter so that calls can be chained.
 
@@ -77,7 +76,7 @@ You can delay emissions for an amount of time. They'll be held in a separate mes
 
 This is a good alternative to methods like `cron`.
 
-You can `schedule` the emission by providing a _Date_, or `delay` the emission a number of seconds using an _integer_.
+You can provide either an _integer_ (milliseconds), a [zeit/ms](https://npm.im/ms) _string_, or a _Date_.
 
 ### Add listeners
 
