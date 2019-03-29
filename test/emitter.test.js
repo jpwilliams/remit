@@ -76,7 +76,7 @@ describe('Emitter', function () {
     it('should parse timestrings and dates in a delay option', function () {
       const emit = emitRemit.emit('options-timestring-test')
 
-      emit.options({delay: 20})
+      emit.options({delay: 20000})
       expect(emit._options).to.have.property('delay', 20000)
       expect(emit._options).to.have.property('schedule', null)
 
