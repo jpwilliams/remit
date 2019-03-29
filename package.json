@@ -14,16 +14,16 @@
   "author": "Jack Williams <jpwilliamsphotography@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "amqplib": "^0.5.1",
-    "callable-instance": "^1.0.0",
+    "amqplib": "^0.5.3",
+    "callable-instance": "^1.0.1",
     "callsite": "^1.0.0",
     "cls-hooked": "^4.2.2",
-    "eventemitter3": "^3.0.0",
-    "generic-pool": "^3.1.7",
+    "eventemitter3": "^3.1.0",
+    "generic-pool": "^3.7.1",
     "ms": "^2.1.1",
     "opentracing": "^0.14.3",
-    "serialize-error": "^2.1.0",
-    "ulid": "^2.2.0"
+    "serialize-error": "^4.0.0",
+    "ulid": "^2.3.0"
   },
   "repository": {
     "type": "git",
@@ -56,9 +56,9 @@
     "utils"
   ],
   "devDependencies": {
-    "chai": "^4.1.1",
+    "chai": "^4.2.0",
     "coveralls": "^3.0.3",
-    "mocha": "^5.0.0",
+    "mocha": "^6.0.2",
     "nyc": "^13.3.0"
   }
 }
