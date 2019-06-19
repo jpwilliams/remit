@@ -18,7 +18,7 @@
     "callable-instance": "^1.0.1",
     "callsite": "^1.0.0",
     "cls-hooked": "^4.2.2",
-    "eventemitter3": "^3.1.0",
+    "eventemitter3": "^4.0.0",
     "generic-pool": "^3.7.1",
     "ms": "^2.1.1",
     "opentracing": "^0.14.3",
