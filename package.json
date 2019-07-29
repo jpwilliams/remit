@@ -14,7 +14,7 @@
   "author": "Jack Williams <jpwilliamsphotography@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "amqplib": "^0.5.3",
+    "amqplib": "^0.5.4",
     "callable-instance": "^1.0.1",
     "callsite": "^1.0.0",
     "cls-hooked": "^4.2.2",
