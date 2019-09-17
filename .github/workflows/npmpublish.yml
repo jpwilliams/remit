@@ -23,7 +23,7 @@ jobs:
       - run: npm ci
       - run: npm test
         env:
-          REMIT_URL: amqp://rabbitmq:${{ job.services.rabbitmq.ports[5672] }}
+          REMIT_URL: amqp://localhost:${{ job.services.rabbitmq.ports[5672] }}
 
   publish-npm:
     needs: build
