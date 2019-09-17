@@ -1,5 +1,5 @@
 {
-  "name": "remit",
+  "name": "@jpwilliams/remit",
   "version": "2.4.1",
   "description": "A small set of functionality used to create microservices that don't need to be aware of one-another's existence.",
   "main": "index.js",
