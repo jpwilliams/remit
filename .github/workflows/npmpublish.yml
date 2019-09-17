@@ -8,13 +8,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
+    container:
+      image: node:10.16-jessie
+
     services:
       rabbitmq:
         image: rabbitmq
         ports:
-          - 5672/tcp
-        
+          - 5672:5672
+
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
@@ -26,8 +29,8 @@ jobs:
           ./.github/utils/wait
           npm test
         env:
-          WAIT_HOSTS: 127.0.0.1:${{ job.services.rabbitmq.ports[5672] }}
-          REMIT_URL: amqp://127.0.0.1:${{ job.services.rabbitmq.ports[5672] }}
+          WAIT_HOSTS: rabbitmq:${{ job.services.rabbitmq.ports[5672] }}
+          REMIT_URL: amqp://rabbitmq:${{ job.services.rabbitmq.ports[5672] }}
 
   publish-npm:
     needs: build
