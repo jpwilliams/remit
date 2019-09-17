@@ -10,7 +10,7 @@ describe('Connection', function () {
       process.removeListener('uncaughtException', originalException);
       process.once("uncaughtException", function (error) {
         recordedError = error
-        expect(recordedError.errno).to.equal('ENOTFOUND')
+        expect(recordedError.errno).to.be.oneOf(['ENOTFOUND', 'EAI_AGAIN'])
         done()
       })
 
