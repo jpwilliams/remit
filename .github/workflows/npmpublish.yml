@@ -25,9 +25,7 @@ jobs:
           node-version: 12
       - run: npm ci
       - name: 'test package'
-        run: |
-          ./.github/utils/wait
-          npm test
+        run: npm test
         env:
           WAIT_HOSTS: rabbitmq:${{ job.services.rabbitmq.ports[5672] }}
           REMIT_URL: amqp://rabbitmq:${{ job.services.rabbitmq.ports[5672] }}
