@@ -26,8 +26,8 @@ jobs:
           ./.github/utils/wait
           npm test
         env:
-          WAIT_HOSTS: localhost:${{ job.services.rabbitmq.ports[5672] }}
-          REMIT_URL: amqp://localhost:${{ job.services.rabbitmq.ports[5672] }}
+          WAIT_HOSTS: 127.0.0.1:${{ job.services.rabbitmq.ports[5672] }}
+          REMIT_URL: amqp://127.0.0.1:${{ job.services.rabbitmq.ports[5672] }}
 
   publish-npm:
     needs: build
