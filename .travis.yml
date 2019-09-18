@@ -1,5 +1,11 @@
+dist: xenial
 language: node_js
-services: rabbitmq
+addons:
+  apt:
+    packages:
+      - rabbitmq-server
+services:
+  - rabbitmq
 sudo: required
 node_js:
   - "node"
