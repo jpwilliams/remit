@@ -8,10 +8,10 @@ jobs:
 
     services:
       rabbitmq:
-        image: rabbitmq:management
+        image: rabbitmq:latest
         ports:
           - 5672/tcp
-        options: '--health-cmd "nc -z localhost 5672" --health-interval 10s --health-timeout 10s --health-retries 6 --health-start-period 60s'
+        options: --health-cmd "rabbitmqctl node_health_check" --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - uses: actions/checkout@v1
