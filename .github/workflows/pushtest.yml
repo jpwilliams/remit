@@ -1,0 +1,25 @@
+name: Test on push
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      rabbitmq:
+        image: rabbitmq:latest
+        ports:
+          - 5672/tcp
+        options: --health-cmd "rabbitmqctl node_health_check" --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - run: npm ci
+      - name: 'test package'
+        run: npm test
+        env:
+          REMIT_URL: amqp://localhost:${{ job.services.rabbitmq.ports[5672] }}
