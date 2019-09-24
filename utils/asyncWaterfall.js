@@ -1,4 +1,4 @@
-const serializeError = require('serialize-error')
+const { serializeError } = require('serialize-error')
 
 function waterfall (...fns) {
   return async function (event) {
