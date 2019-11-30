@@ -11,10 +11,6 @@ function parseEvent (properties = {}, fields = {}, data, opts = {}) {
   }
 
   if (properties.headers) {
-    if (properties.headers.context) {
-      event.context = properties.headers.context
-    }
-
     if (properties.headers.uuid) {
       event.eventId = properties.headers.uuid
     }
