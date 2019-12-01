@@ -24,7 +24,7 @@ interface RemitOptions {
 	/** 
 	 * The URL where RabbitMQ is located.
 	 * 
-	 * Defaults to the `REMIT_URL` environment variable or 'remit'
+	 * Defaults to the `REMIT_URL` environment variable or 'amqp://localhost'
 	 */
 	url?: string
 
@@ -91,7 +91,7 @@ declare namespace Remit {
 	interface GlobalEndpoint {
 		/**
 		 * Used to create a new Request to fetch data from an Endpoint.
-		 * These Requests can be re-used many times to request a response from the same Endpoint with differing data.\
+		 * These Requests can be re-used many times to request a response from the same Endpoint with differing data.
 		 * 
 		 * Used to create a new Endpoint to listen to data from and respond to Requests.
 		 * An Endpoint must be created, a `.handler()` set, and then be `.start()`ed to receive requests.
