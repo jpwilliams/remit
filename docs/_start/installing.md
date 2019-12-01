@@ -15,7 +15,7 @@ brew services start rabbitmq
 Next, in whatever Node project you're running, use `npm`, `yarn` or a similar package manager to install Remit:
 
 {% highlight bash %}
-npm install remit --save
+npm install @jpwilliams/remit --save
 {% endhighlight %}
 
 Done!

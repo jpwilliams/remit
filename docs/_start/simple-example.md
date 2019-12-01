@@ -9,14 +9,14 @@ A common interaction between services is a request and a response. We'll test th
 
 {% highlight js %}
 // endpoint.js
-const remit = require('remit')()
+const remit = require('@jpwilliams/remit')()
 const endpoint = remit
   .endpoint('hello')
   .handler(event => `Hello, ${event.data.name}!`)
   .start()
 
 // request.js
-const remit = require('remit')()
+const remit = require('@jpwilliams/remit')()
 const sayHello = remit.request('hello')
 sayHello({name: 'Jack'}).then(console.log)
 {% endhighlight %}
@@ -37,7 +37,7 @@ First, let's create a new project and install Remit. In the terminal:
 mkdir remit-example
 cd remit-example
 npm init -y
-npm install remit --save
+npm install @jpwilliams/remit --save
 {% endhighlight %}
 
 
@@ -47,7 +47,7 @@ Sorted. Now let's create a new file called `endpoint.js`:
 
 {% highlight js %}
 // endpoint.js
-const Remit = require('remit') // import remit
+const Remit = require('@jpwilliams/remit') // import remit
 const remit = Remit() // connect to remit
 
 // create a new endpoint
@@ -68,7 +68,7 @@ Let's now create another file called `request.js` which we'll use to send a requ
 
 {% highlight js %}
 // request.js
-const Remit = require('remit') // import remit
+const Remit = require('@jpwilliams/remit') // import remit
 const remit = Remit() // connect to remit
 
 const sayHello = remit.request('hello') // set up a request that hits the "hello" endpoint
