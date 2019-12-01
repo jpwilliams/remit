@@ -9,6 +9,9 @@ npm install @jpwilliams/remit
 ```
 
 ``` js
+const Remit = require('@jpwilliams/remit')
+const remit = Remit({ name: 'user-service' })
+
 remit
   .endpoint('user')
   .handler((event) => {
@@ -17,9 +20,14 @@ remit
       email: 'jack@wildfire.gg'
     }
   })
+  .start()
 
 // another service/process
-const user = await remit.request('user')()
+const Remit = require('@jpwilliams/remit')
+const remit = Remit({ name: 'api' })
+
+const getUser = remit.request('user')
+const user = await getUser(123)
 console.log(user)
 
 /* {
