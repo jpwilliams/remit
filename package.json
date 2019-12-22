@@ -15,6 +15,7 @@
   "author": "Jack Williams <jpwilliamsphotography@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@jpwilliams/waitgroup": "^0.2.3",
     "amqplib": "^0.5.3",
     "callable-instance": "^1.0.1",
     "callsite": "^1.0.0",
