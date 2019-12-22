@@ -21,9 +21,9 @@ emitUserCreated({ id: 456, name: 'John' })
 
 ### Create and send an emission
 
-`remit.emit(event[, options])` returns a new emitter that will emit data to any interested [listeners][listen], dictated by `event`. The best practice for emissions is to create them once and reuse them. Creation returns a function which, when run, returns a promise that's either resolved or rejected depending on whether the emission successfully sent.
+`remit.emit(event: string | EmitterOptions): Emitter` returns a new emitter that will emit data to any interested [listeners][listen], dictated by `event`. The best practice for emissions is to create them once and reuse them. Creation returns a function which, when run, returns a promise that's either resolved or rejected depending on whether the emission successfully sent.
 
-{% highlight.js %}
+{% highlight js %}
 // create an emission
 const emitUserCreated = remit.request('user.created')
 

@@ -9,6 +9,7 @@ npm install @jpwilliams/remit
 ```
 
 ``` js
+// user service
 const Remit = require('@jpwilliams/remit')
 const remit = Remit({ name: 'user-service' })
 
@@ -17,12 +18,14 @@ remit
   .handler((event) => {
     return {
       name: 'Jack Williams',
-      email: 'jack@wildfire.gg'
+      email: 'jpwilliamsphotography@gmail.com'
     }
   })
   .start()
+```
 
-// another service/process
+``` js
+// an api
 const Remit = require('@jpwilliams/remit')
 const remit = Remit({ name: 'api' })
 
@@ -32,7 +35,7 @@ console.log(user)
 
 /* {
   name: 'Jack Williams',
-  email: 'jack@wildfire.gg'
+  email: 'jpwilliamsphotography@gmail.com'
 } */
 ```
 
@@ -53,44 +56,56 @@ Endpoints and listeners are grouped by "Service Name" specified as `name` or the
 
 ---
 
-## Contents
+## Quick start
 
-* [What's remit?](#)
-* [Recommendations](#)
-* [API/Usage](#)
-* [Events](#)
-* [Handlers](#)
-* [Tracing](#tracing)
+First, import the `Remit` constructor.
+
+``` js
+const Remit = require('@jpwilliams/remit')
+```
+
+Now let's 
 
 ---
 
 ## API/Usage
 
-* [request(event)](#)
-  * [request.on(eventName, listener)](#)
-  * [request.fallback(data)](#)
-  * [request.options(options)](#)
-  * [request.ready()](#)
-  * [request.send([data[, options]]) OR request([data[, options]])](#)
-* [endpoint(event[, ...handlers])](#)
-  * [endpoint.handler(...handlers)](#)
-  * [endpoint.on(eventName, listener)](#)
-  * [endpoint.options(options)](#)
-  * [endpoint.start()](#)
-  * [endpoint.pause()](#)
-  * [endpoint.resume()](#)
-* [emit(event)](#)
-  * [emit.on(eventName, listener)](#)
-  * [emit.options(options)](#)
-  * [emit.ready()](#)
-  * [emit.send([data[, options]]) OR emit([data[, options]])](#)
-* [listen(event[, ...handlers])](#)
-  * [listen.handler(...handlers)](#)
-  * [listen.on(eventName, listener)](#)
-  * [listen.options(options)](#)
-  * [listen.start()](#)
-  * [listen.pause()](#)
-  * [listen.resume()](#)
+- [@jpwilliams/remit](#jpwilliamsremit)
+	- [What's remit?](#whats-remit)
+	- [Quick start](#quick-start)
+	- [API/Usage](#apiusage)
+			- [`request(event)`](#requestevent)
+			- [`request.on(eventName, listener)`](#requestoneventname-listener)
+			- [`request.fallback(data)`](#requestfallbackdata)
+			- [`request.options(options)`](#requestoptionsoptions)
+			- [`request.ready()`](#requestready)
+			- [`request.send([data[, options]])`](#requestsenddata-options)
+			- [`endpoint(event[, ...handlers])`](#endpointevent-handlers)
+			- [`endpoint.handler(...handlers)`](#endpointhandlerhandlers)
+			- [`endpoint.on(eventName, listener)`](#endpointoneventname-listener)
+			- [`endpoint.options(options)`](#endpointoptionsoptions)
+			- [`endpoint.start()`](#endpointstart)
+			- [`endpoint.pause([cold])`](#endpointpausecold)
+			- [`endpoint.resume()`](#endpointresume)
+			- [`emit.on(eventName, listener)`](#emitoneventname-listener)
+			- [`emit.options(options)`](#emitoptionsoptions)
+			- [`emit.ready()`](#emitready)
+			- [`emit.send([data[, options]])`](#emitsenddata-options)
+			- [`listen.handler(...handlers)`](#listenhandlerhandlers)
+			- [`listen.on(eventName, listener)`](#listenoneventname-listener)
+			- [`listen.options(options)`](#listenoptionsoptions)
+			- [`listen.start()`](#listenstart)
+			- [`listen.pause([cold])`](#listenpausecold)
+			- [`listen.resume()`](#listenresume)
+	- [Events](#events)
+	- [Handlers](#handlers)
+			- [Simple returns](#simple-returns)
+			- [Incoming data](#incoming-data)
+			- [Event object](#event-object)
+			- [Handling completion](#handling-completion)
+			- [Middleware](#middleware)
+	- [Tracing](#tracing)
+	- [License](#license)
 
 ---
 

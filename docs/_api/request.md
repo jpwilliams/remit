@@ -20,7 +20,7 @@ const user456 = await getUser(456)
 
 ### Create and send a request
 
-`remit.request(event[, options])` creates a new requester for data from an [endpoint][endpoint] dictated by `event`. Options can be passed in straight away by passing an object in place of `event`. If an object is passed, the `event` key is required. See `request.options` for available options.
+`remit.request(event: string | RequestOptions): Request` creates a new requester for data from an [endpoint][endpoint] dictated by `event`. Options can be passed in straight away by passing an object in place of `event`. If an object is passed, the `event` key is required. See `request.options` for available options.
 
 The best practice for requests is to create them once and reuse them. Creation returns a function which, when run, returns a promise that's either resolved or rejected depending on whether the request succeeded or failed.
 
