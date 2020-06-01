@@ -23,7 +23,7 @@
     "generic-pool": "^3.7.1",
     "ms": "^2.1.1",
     "opentracing": "^0.14.3",
-    "serialize-error": "^5.0.0",
+    "serialize-error": "^7.0.1",
     "ulid": "^2.3.0"
   },
   "repository": {
