@@ -16,7 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "amqplib": "^0.5.3",
-    "callable-instance": "^1.0.1",
+    "callable-instance": "^2.0.0",
     "callsite": "^1.0.0",
     "cls-hooked": "^4.2.2",
     "eventemitter3": "^4.0.0",
