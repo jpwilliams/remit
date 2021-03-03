@@ -518,8 +518,8 @@ describe('Endpoint', function () {
       } catch (e) {
         errorCaught = true
         expect(e).to.be.an('object')
-        expect(e).to.have.property('code', 'request_timedout')
-        expect(e).to.have.property('message', 'Request timed out after no response for 2000ms')
+        expect(e).to.have.property('code', 'no_route')
+        expect(e).to.have.property('message', 'Request could not be routed to any endpoints. This signifies no matching endpoints are currently running.')
       }
 
       expect(errorCaught).to.equal(true)
@@ -555,8 +555,8 @@ describe('Endpoint', function () {
       } catch (e) {
         errorCaught = true
         expect(e).to.be.an('object')
-        expect(e).to.have.property('code', 'request_timedout')
-        expect(e).to.have.property('message', 'Request timed out after no response for 2000ms')
+        expect(e).to.have.property('code', 'no_route')
+        expect(e).to.have.property('message', 'Request could not be routed to any endpoints. This signifies no matching endpoints are currently running.')
       }
 
       expect(errorCaught).to.equal(true)

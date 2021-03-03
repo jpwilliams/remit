@@ -139,7 +139,11 @@ describe('Request', function () {
       this.slow(2000)
 
       const request = remit.request('timeout-test')
-      request.options({timeout: 1000})
+	  request.options({timeout: 1000})
+	  
+	  await remit.endpoint('timeout-test')
+		  .handler((e, cb) => setTimeout(cb, 3000))
+		  .start()
 
       try {
         await request()
